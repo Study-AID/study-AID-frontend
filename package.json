@@ -1,0 +1,41 @@
+{
+  "name": "study_aid",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm with-env .env.development next dev --turbopack",
+    "build": "pnpm with-env .env.production next build",
+    "start": "pnpm with-env .env.production next start",
+    "test": "pnpm with-env .env.test jest",
+    "lint": "pnpm with-env .env.development -v SKIP_ENV_VALIDATION=1 next lint",
+    "with-env": "dotenv -e"
+  },
+  "dependencies": {
+    "@material-tailwind/react": "3.0.0-beta.24",
+    "@tanstack/react-query": "^5.71.1",
+    "@tanstack/react-query-devtools": "^5.71.2",
+    "autoprefixer": "^10.4.21",
+    "axios": "^1.8.4",
+    "dotenv": "^16.4.7",
+    "hero-ui": "^6.0.1",
+    "lucia-auth": "^1.8.0",
+    "next": "15.2.4",
+    "postcss": "^8.5.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.55.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.2.4",
+    "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
