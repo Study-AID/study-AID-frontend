@@ -1,16 +1,28 @@
-import type { Config } from "tailwindcss";
-import { mtConfig } from "@material-tailwind/react";
+import type { Config } from 'tailwindcss';
+import {
+  isolateInsideOfContainer,
+  scopedPreflightStyles,
+} from 'tailwindcss-scoped-preflight';
 
-const config: Config = {
+module.exports = {
   content: [
-    "./pages/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/@material-tailwind/react/**/*.{js,ts,jsx,tsx}",
+    './pages/**/*.{js,ts,jsx,tsx}',
+    './components/**/*.{js,ts,jsx,tsx}',
+    './node_modules/@material-tailwind/react/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {},
   },
-  plugins: [mtConfig],
+  corePlugins: {
+    preflight: false,
+  },
+  plugins: [
+    scopedPreflightStyles({
+      isolationStrategy: isolateInsideOfContainer('.twp', {
+        except: '.no-twp',
+      }),
+    }),
+    require('@tailwindcss/typography'),
+    require('tailwindcss-animate'),
+  ],
 };
-
-export default config;
