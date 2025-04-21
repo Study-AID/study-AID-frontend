@@ -1,0 +1,9 @@
+services:
+  frontend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.devcontainer
+    working_dir: "/workspace"
+    tty: true
+    volumes:
+      - ./:/workspace:cached
