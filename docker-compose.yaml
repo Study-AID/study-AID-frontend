@@ -1,9 +1,15 @@
 services:
   frontend:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile.devcontainer
-    working_dir: "/workspace"
+    working_dir: '/workspace'
     tty: true
     volumes:
       - ./:/workspace:cached
+      - sa-frontend-node-modules:/workspace/node_modules
+      - sa-frontend-pnpm-store:/workspace/.pnpm-store
+
+volumes:
+  sa-frontend-node-modules:
+  sa-frontend-pnpm-store:
