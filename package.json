@@ -17,6 +17,7 @@
     "@tanstack/react-query-devtools": "^5.71.2",
     "autoprefixer": "^10.4.21",
     "axios": "^1.8.4",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "dotenv-cli": "^8.0.0",
     "lucide-react": "^0.501.0",

@@ -24,7 +24,7 @@ export function UserPlaceholder() {
       {/* Dropdown 메뉴 */}
       <Menu as="div" className="">
         <MenuButton className="flex items-center gap-1 bg-transparent text-gray-700 focus:outline-none">
-          <span className="font-semibold">장우성</span>
+          <span className="font-semibold">장우성님</span>
           <ChevronDown className="h-4 w-4" aria-hidden="true" />
         </MenuButton>
 
