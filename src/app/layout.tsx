@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import '@/style/global.css';
 import '@radix-ui/themes/styles.css';
-import { Theme } from '@radix-ui/themes';
+import ReactQueryProvider from '@/lib/react-query';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -39,7 +39,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-[Noto_Sans_KR] antialiased`}
       >
-        <Theme>{children}</Theme>
+        <ReactQueryProvider>{children}</ReactQueryProvider>
       </body>
     </html>
   );

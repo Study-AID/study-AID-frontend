@@ -1,48 +1,81 @@
 'use client';
 
+import { api } from '@/lib/api';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { LoginFormValues, loginSchema } from './schema';
 
 export default function Login() {
-  //react-hook-form 으로 변경할 것
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const router = useRouter();
 
-  //Server Action 으로 변경할 것
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Logging in:', { email, password });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: (data: LoginFormValues) => {
+      return api.post('/api/v1/auth/login', data);
+    },
+    onSuccess: (data) => {
+      // Store token and redirect
+      sessionStorage.setItem('access_token', data.access_token);
+      router.push('/');
+    },
+  });
+
+  const onSubmit = (data: LoginFormValues) => {
+    loginMutation.mutate(data);
   };
 
-  //Forwarding 으로 변경할 것
   const onGoogleLogin = () => {
-    console.log('Google 로그인');
+    // GET `/api/auth/google/login`
   };
 
   return (
     <>
-      <form onSubmit={handleLogin} className="space-y-4">
-        <input
-          type="email"
-          placeholder="이메일 주소"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-          required
-        />
-        <input
-          type="password"
-          placeholder="비밀번호"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-          required
-        />
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <input
+            type="email"
+            placeholder="이메일 주소"
+            {...register('email')}
+            className="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          />
+          {errors.email && (
+            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+          )}
+        </div>
+        <div>
+          <input
+            type="password"
+            placeholder="비밀번호"
+            {...register('password')}
+            className="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          />
+          {errors.password && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.password.message}
+            </p>
+          )}
+        </div>
         <button
           type="submit"
-          className="w-full rounded-lg bg-indigo-600 p-3 text-white transition hover:bg-indigo-700"
+          disabled={loginMutation.isPending}
+          className="w-full rounded-lg bg-indigo-600 p-3 text-white transition hover:bg-indigo-700 disabled:bg-indigo-400"
         >
-          로그인
+          {loginMutation.isPending ? '로그인 중...' : '로그인'}
         </button>
       </form>
 
