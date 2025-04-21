@@ -33,9 +33,6 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link href="/style/global.css" rel="stylesheet" />
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-[Noto_Sans_KR] antialiased`}
       >
