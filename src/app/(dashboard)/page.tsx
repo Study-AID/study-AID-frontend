@@ -39,13 +39,13 @@ function SemesterCard({
   return (
     <div
       onClick={onClick}
-      className={`flex h-56 w-44 cursor-pointer flex-col overflow-hidden rounded-lg shadow-md transition hover:shadow-lg ${isAdd ? 'bg-gray-600 text-white' : 'bg-white'}`}
+      className={`flex h-56 w-44 cursor-pointer flex-col overflow-hidden rounded-lg shadow-md transition hover:shadow-xl ${isAdd ? 'bg-black/65 text-white' : 'border border-[#D0D0D0] bg-[#F9F9F9]'}`}
     >
       <div className="flex flex-1 items-center justify-center text-xl font-semibold">
         {isAdd ? <Plus size={48} /> : display}
       </div>
       <div
-        className={`flex h-12 items-center justify-center text-sm font-medium ${isAdd ? 'bg-gray-800' : 'bg-gray-100 text-gray-700'}`}
+        className={`flex h-12 items-center justify-center text-sm font-medium ${isAdd ? 'bg-opacity-30 bg-black/30' : 'border border-[#D3D3D3] bg-[#ECECEC] text-gray-700'}`}
       >
         {isAdd ? label : `${classCount} Classes`}
       </div>
@@ -60,15 +60,24 @@ export default function DashboardPage() {
   const mm = String(today.getMonth() + 1).padStart(2, '0');
   const dd = String(today.getDate()).padStart(2, '0');
   const month = today.getMonth() + 1;
-  const semesterLabel = month >= 3 && month <= 8 ? 'Spring' : 'Fall';
-  const headerText = `${yyyy}.${mm}.${dd} (${yyyy}년도 ${semesterLabel === 'Spring' ? '1학기' : '2학기'})`;
+  // 3 ~ 6 : Spring, 7 ~ 8 : Summer, 9 ~ 12 : Fall, 1 ~ 2 : Winter
+  const semesterLabel =
+    month >= 3 && month <= 6
+      ? 'Spring'
+      : month >= 9 && month <= 12
+        ? 'Fall'
+        : month >= 1 && month <= 2
+          ? 'Winter'
+          : 'Summer';
+  const headerText = `${yyyy}.${mm}.${dd}`;
+  const semesterId = `${yyyy}-${semesterLabel === 'Spring' ? '1' : semesterLabel === 'Fall' ? '2' : semesterLabel === 'Winter' ? '3' : '4'}`;
 
   // 모달 상태 및 선택값
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState(yyyy);
-  const [selectedTerm, setSelectedTerm] = useState<'Spring' | 'Fall'>(
-    semesterLabel,
-  );
+  const [selectedTerm, setSelectedTerm] = useState<
+    'Spring' | 'Fall' | 'Summer' | 'Winter'
+  >(semesterLabel as 'Spring' | 'Fall' | 'Summer' | 'Winter');
 
   // 연도 옵션 (전후 1년)
   const yearOptions = [yyyy - 1, yyyy, yyyy + 1];
@@ -83,13 +92,17 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-8">
-      {/* 헤더: 날짜 및 추가 버튼 */}
+    <div className="w-full p-8">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{headerText}</h1>
+        <h1 className="text-2xl font-bold text-[#5E5E5E]">
+          {headerText}{' '}
+          <span className="text-lg font-bold">
+            ({`${yyyy}년 ${semesterLabel} 학기`})
+          </span>
+        </h1>
         <button
           onClick={openModal}
-          className="rounded-full p-2 transition hover:bg-gray-200"
+          className="cursor-pointer rounded-full p-2 transition hover:bg-gray-200"
           aria-label="학기 추가"
         >
           <Plus size={24} />
@@ -97,7 +110,7 @@ export default function DashboardPage() {
       </div>
 
       {/* 학기 카드 그리드 */}
-      <div className="grid grid-cols-4 gap-6">
+      <div className="grid grid-cols-7 gap-6">
         {semesters.map((s) => (
           <SemesterCard
             key={s.id}
@@ -121,7 +134,7 @@ export default function DashboardPage() {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="bg-opacity-30 fixed inset-0 bg-black" />
+            <div className="bg-opacity-30 fixed inset-0 bg-black/30" />
           </TransitionChild>
 
           <div className="fixed inset-0 overflow-y-auto">
@@ -167,9 +180,11 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="mt-6">
-                    <button className="w-full rounded border border-gray-300 p-2">
-                      {`${selectedYear}-${selectedTerm}`}
-                    </button>
+                    <input
+                      type="text"
+                      value={`${selectedYear}-${selectedTerm}`}
+                      className="w-full rounded border border-gray-300 bg-white p-2"
+                    />
                   </div>
 
                   <div className="mt-6 flex justify-end gap-2">
