@@ -42,6 +42,8 @@ export default function ReactQueryProvider({
               if (error.response?.status === 500) {
                 alert('서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
               }
+            } else {
+              // Unexpected error
             }
           },
         }),
@@ -62,7 +64,7 @@ export default function ReactQueryProvider({
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+      <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
 }
