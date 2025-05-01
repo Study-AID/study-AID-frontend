@@ -15,7 +15,6 @@ const nextConfig: NextConfig = {
   watchOptions: {
     pollIntervalMs: 1000,
   },
-  transpilePackages: ['@ap-solution/database'],
 };
 
 export default nextConfig;
