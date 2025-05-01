@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm with-env .env.development next dev --turbopack",
-    "build": "pnpm with-env .env.production next build",
-    "start": "pnpm with-env .env.production next start",
-    "test": "pnpm with-env .env.test jest",
-    "lint": "pnpm with-env .env.development -v SKIP_ENV_VALIDATION=1 next lint",
-    "with-env": "dotenv -e"
+    "dev": "pnpm with-env next dev --turbopack",
+    "build": "pnpm with-env next build",
+    "start": "pnpm with-env next start",
+    "lint": "pnpm with-env -v SKIP_ENV_VALIDATION=1 next lint",
+    "with-env": "dotenv -e .env.development --",
+    "openapi:generate": "openapi-typescript http://localhost:8080/api/api-docs?format=openapi -o ./src/types/openapi.schema.d.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.2",
@@ -25,6 +25,7 @@
     "dotenv-cli": "^8.0.0",
     "lucide-react": "^0.501.0",
     "next": "15.2.4",
+    "openapi-fetch": "^0.13.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.55.0",
@@ -44,6 +45,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
     "msw": "^2.7.4",
+    "openapi-typescript": "^7.6.1",
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
