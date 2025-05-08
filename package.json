@@ -8,7 +8,7 @@
     "start": "pnpm with-env next start",
     "lint": "pnpm with-env -v SKIP_ENV_VALIDATION=1 next lint",
     "with-env": "dotenv -e .env.development --",
-    "openapi:generate": "openapi-typescript http://localhost:8080/api/api-docs?format=openapi -o ./src/types/openapi.schema.d.ts"
+    "openapi:generate": "openapi-typescript http://100.122.48.18:8080/api/api-docs?format=openapi -o ./src/types/openapi.schema.d.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.2",
@@ -18,14 +18,15 @@
     "@tanstack/react-query-devtools": "^5.71.2",
     "autoprefixer": "^10.4.21",
     "axios": "^1.8.4",
-    "date-fns": "^4.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "dotenv-cli": "^8.0.0",
     "lucide-react": "^0.501.0",
     "next": "15.2.4",
     "openapi-fetch": "^0.13.5",
+    "openapi-react-query": "^0.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.55.0",

@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
   watchOptions: {
     pollIntervalMs: 1000,
   },
+  rewrites: async () => {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://100.122.48.18:8080/api/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;

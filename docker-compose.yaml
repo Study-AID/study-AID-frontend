@@ -5,8 +5,11 @@ services:
       dockerfile: Dockerfile.devcontainer
     working_dir: '/workspace'
     tty: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=1000
     volumes:
-      - ./:/workspace:cached
+      - ./:/workspace:delegated
       - sa-frontend-node-modules:/workspace/node_modules
       - sa-frontend-pnpm-store:/workspace/.pnpm-store
 

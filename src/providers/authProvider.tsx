@@ -1,5 +1,7 @@
 'use client';
 
+import { api } from '@/api/client';
+import { useRouter } from 'next/navigation';
 import React, { PropsWithChildren, useEffect, useState } from 'react';
 
 export interface CreateContextWithHookOptions {
@@ -48,7 +50,7 @@ export function createContextWithHook<ContextType>(
 
 export const [AuthStateContextProvider, useAuthState] = createContextWithHook<{
   isLoggedIn: boolean;
-  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean | undefined>>;
+  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
 }>({
   name: 'AuthStateContext',
   errorMessage:
@@ -56,21 +58,7 @@ export const [AuthStateContextProvider, useAuthState] = createContextWithHook<{
 });
 
 export const AuthClientProvider = ({ children }: PropsWithChildren) => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | undefined>(undefined);
-
-  useEffect(() => {
-    // TODO: Try fetch user data, and set LoggedIn state
-
-    setTimeout(() => {
-      setIsLoggedIn(true);
-    }, 1000);
-  }, []);
-
-  // Loading State
-  if (isLoggedIn === undefined) {
-    // TODO: Add loading state (ex: spinner)
-    return null;
-  }
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   return (
     <AuthStateContextProvider
@@ -82,4 +70,34 @@ export const AuthClientProvider = ({ children }: PropsWithChildren) => {
       {children}
     </AuthStateContextProvider>
   );
+};
+
+export const AuthProvider = ({ children }: PropsWithChildren) => {
+  const router = useRouter();
+  const { isLoggedIn, setIsLoggedIn } = useAuthState();
+
+  const { data: me, isLoading, error } = api.useQuery('get', '/v1/auth/me', {});
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (me) {
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+      router.replace('/login');
+    }
+  }, [isLoading, me, router, setIsLoggedIn]);
+
+  // Loading State
+  if (isLoggedIn === undefined) {
+    // TODO: Add loading state (ex: spinner)
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="h-32 w-32 animate-spin rounded-full border-t-2 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  return children;
 };
