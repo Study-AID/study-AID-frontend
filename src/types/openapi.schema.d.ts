@@ -72,6 +72,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/lectures/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a specific lecture by ID
+         * @description Retrieves a specific lecture by its ID
+         */
+        get: operations["getLectureById"];
+        /**
+         * Update a lecture
+         * @description Updates an existing lecture
+         */
+        put: operations["updateLecture"];
+        post?: never;
+        /**
+         * Delete a lecture
+         * @description Deletes a specific lecture by its ID
+         */
+        delete: operations["deleteLecture"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lectures/{id}/display-order-lex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update lecture display order lex
+         * @description Updates the display order lex of a lecture
+         */
+        put: operations["updateLectureDisplayOrderLex"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/courses/{id}": {
         parameters: {
             query?: never;
@@ -138,6 +186,26 @@ export interface paths {
          * @description Creates a new semester
          */
         post: operations["createSemester"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lectures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a new lecture
+         * @description Creates a new lecture
+         */
+        post: operations["createLecture"];
         delete?: never;
         options?: never;
         head?: never;
@@ -256,6 +324,26 @@ export interface paths {
          * @description Retrieves a semester with the year and season
          */
         get: operations["getSemesterByYearAndSeason"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lectures/course/{courseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all lectures for a specific course
+         * @description Retrieves a list of all lectures for a specific course
+         */
+        get: operations["getLecturesByCourse"];
         put?: never;
         post?: never;
         delete?: never;
@@ -423,6 +511,69 @@ export interface components {
              */
             endDate?: string;
         };
+        /** @description Lecture update request */
+        UpdateLectureRequest: {
+            /** @description Updated lecture title */
+            title: string;
+            /** @description Updated lecture material path */
+            materialPath: string;
+            /** @description Updated lecture material type */
+            materialType: string;
+        };
+        /** @description Lecture response DTO */
+        LectureResponse: {
+            /**
+             * Format: uuid
+             * @description Unique ID of the lecture
+             */
+            id?: string;
+            /**
+             * Format: uuid
+             * @description Unique ID of the course
+             */
+            courseId?: string;
+            /**
+             * Format: uuid
+             * @description Unique ID of the user
+             */
+            userId?: string;
+            /** @description Title of the lecture */
+            title?: string;
+            /** @description Path to the lecture material */
+            materialPath?: string;
+            /** @description Type of the lecture material */
+            materialType?: string;
+            /** @description Display order lexicographically */
+            displayOrderLex?: string;
+            /** @description Notes associated with the lecture */
+            note?: {
+                [key: string]: Record<string, never>;
+            };
+            /** @description Summary of the lecture */
+            summary?: {
+                [key: string]: Record<string, never>;
+            };
+            /**
+             * @description Summary status of the lecture
+             * @enum {string}
+             */
+            summaryStatus?: "not_started" | "in_progress" | "completed";
+            /**
+             * Format: date-time
+             * @description Creation timestamp of the lecture
+             */
+            createdAt?: string;
+            /**
+             * Format: date-time
+             * @description Last update timestamp of the lecture
+             */
+            updatedAt?: string;
+        };
+        /** @description Lecture update request */
+        UpdateLectureDisplayOrderLexRequest: {
+            /** @description Updated lecture display order lex */
+            displayOrderLex: string;
+        };
         /** @description Course update request */
         UpdateCourseRequest: {
             /** @description Updated course name */
@@ -510,6 +661,16 @@ export interface components {
              */
             season?: string;
         };
+        CreateLectureInput: {
+            /** Format: uuid */
+            courseId?: string;
+            /** Format: uuid */
+            userId?: string;
+            title?: string;
+            materialPath?: string;
+            materialType?: string;
+            displayOrderLex?: string;
+        };
         CreateCourseInput: {
             /** Format: uuid */
             userId?: string;
@@ -536,6 +697,11 @@ export interface components {
         SemesterListResponse: {
             /** @description List of semesters */
             semesters?: components["schemas"]["SemesterResponse"][];
+        };
+        /** @description List of lectures response */
+        LectureListResponse: {
+            /** @description List of lectures response */
+            lectures?: components["schemas"]["LectureResponse"][];
         };
         /** @description List of courses response */
         CourseListResponse: {
@@ -835,6 +1001,218 @@ export interface operations {
             };
         };
     };
+    getLectureById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the lecture to retrieve */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved lecture */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description User does not have access to this lecture */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description Lecture not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+        };
+    };
+    updateLecture: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the lecture to update */
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Lecture details (title, materialPath, materialType) */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLectureRequest"];
+            };
+        };
+        responses: {
+            /** @description Successfully updated lecture */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description Invalid input data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description User does not have access to this lecture */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description Lecture not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+        };
+    };
+    deleteLecture: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the lecture to delete */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully deleted lecture */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description User does not have access to this lecture */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lecture not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateLectureDisplayOrderLex: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the lecture to update */
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Updated lecture display order lex (displayOrderLex) */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLectureDisplayOrderLexRequest"];
+            };
+        };
+        responses: {
+            /** @description Successfully updated lecture display order lex */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description Invalid input data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description User does not have access to this lecture */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lecture not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getCourseById: {
         parameters: {
             query?: never;
@@ -1117,6 +1495,49 @@ export interface operations {
             };
         };
     };
+    createLecture: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lecture details (courseId, title) */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLectureInput"];
+            };
+        };
+        responses: {
+            /** @description Successfully created lecture */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description Invalid input data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+        };
+    };
     createCourse: {
         parameters: {
             query?: never;
@@ -1364,6 +1785,56 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SemesterResponse"];
+                };
+            };
+        };
+    };
+    getLecturesByCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the lecture */
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved lectures */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureListResponse"];
+                };
+            };
+            /** @description User does not have access to this lecture */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureListResponse"];
+                };
+            };
+            /** @description Lecture not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureListResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureListResponse"];
                 };
             };
         };

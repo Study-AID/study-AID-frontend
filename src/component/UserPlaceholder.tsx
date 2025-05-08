@@ -1,5 +1,6 @@
 'use client';
 
+import { api } from '@/api/client';
 import {
   Disclosure,
   DisclosureButton,
@@ -10,16 +11,18 @@ import { ChevronDown } from 'lucide-react';
 import { Fragment } from 'react';
 
 export function UserPlaceholder() {
+  const { data: me, isLoading, error } = api.useQuery('get', '/v1/auth/me', {});
+
   return (
     <div className="relative flex items-center gap-4">
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 font-medium text-gray-600">
-        장
+        {me?.data?.name?.charAt(0)}
       </div>
       <Disclosure as="div" className="">
         {({ open }) => (
           <>
             <DisclosureButton className="flex items-center gap-1 bg-transparent text-gray-700 focus:outline-none">
-              <span className="font-semibold">장우성님</span>
+              <span className="font-semibold">{me?.data?.name}님</span>
               <ChevronDown className="h-4 w-4 transform transition-transform" />
             </DisclosureButton>
             <Transition

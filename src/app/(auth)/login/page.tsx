@@ -1,6 +1,7 @@
 'use client';
 
-import { api } from '@/lib/api';
+import { api } from '@/api/client';
+import { useAuthState } from '@/providers/authProvider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -11,6 +12,7 @@ import { LoginFormValues, loginSchema } from './schema';
 
 export default function Login() {
   const router = useRouter();
+  const { setIsLoggedIn } = useAuthState();
 
   const {
     register,
@@ -24,19 +26,23 @@ export default function Login() {
     },
   });
 
-  const loginMutation = useMutation({
-    mutationFn: (data: LoginFormValues) => {
-      return api.post('/api/v1/auth/login', data);
+  const loginMutation = api.useMutation('post', '/v1/auth/login/email', {
+    onSuccess: (response: any) => {
+      const { accessToken } = response.data.token;
+      console.log(response);
+      sessionStorage.setItem('access_token', accessToken);
+      setIsLoggedIn(true);
     },
-    onSuccess: (data) => {
-      // Store token and redirect
-      sessionStorage.setItem('access_token', data.access_token);
-      router.push('/');
+    onError: (error) => {
+      console.error('Login error:', error);
     },
   });
 
   const onSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate(data);
+    loginMutation.mutate({
+      body: data,
+    });
+    router.push('/');
   };
 
   const onGoogleLogin = () => {

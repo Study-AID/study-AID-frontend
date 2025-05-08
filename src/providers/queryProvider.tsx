@@ -33,29 +33,13 @@ export default function ReactQueryProvider({
           },
         },
         queryCache: new QueryCache({
-          onError: (error, query) => {
-            if (axios.isAxiosError(error)) {
-              if (error.response?.status === 401 && !path.includes('/login')) {
-                query.reset();
-                router.push('/login', { scroll: false });
-              }
-              if (error.response?.status === 500) {
-                alert('서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
-              }
-            } else {
-              // Unexpected error
-            }
+          onError: (error) => {
+            console.error('React Query caught error:', error);
           },
         }),
         mutationCache: new MutationCache({
           onError: (error) => {
-            if (
-              axios.isAxiosError(error) &&
-              error.response?.status === 401 &&
-              !path.includes('/login')
-            ) {
-              router.push('/login', { scroll: false });
-            }
+            console.error('Mutation error:', error);
           },
         }),
       }),

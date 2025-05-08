@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/devcontainers/javascript-node:20
 
-WORKDIR /workspaces/my-project
+WORKDIR /workspaces
 
 ENV PNPM_HOME=/workspaces/pnpm
 RUN corepack enable pnpm
