@@ -15,14 +15,6 @@ const nextConfig: NextConfig = {
   watchOptions: {
     pollIntervalMs: 1000,
   },
-  rewrites: async () => {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://host.docker.internal:8080/api/:path*',
-      },
-    ];
-  },
 };
 
 export default nextConfig;
