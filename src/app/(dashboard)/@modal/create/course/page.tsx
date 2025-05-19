@@ -4,10 +4,11 @@ import { api } from '@/api/client';
 import { DialogTitle } from '@headlessui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import ModalWrapper from '../../_components/ModalWrapper';
-import { CourseSchema, courseSchema } from '../[semesterId]/schema';
+import { courseSchema, CourseSchema } from './schema';
 
 export default function CourseCreateModal() {
   const router = useRouter();
@@ -15,9 +16,16 @@ export default function CourseCreateModal() {
 
   const semesterId = searchParams.get('semesterId');
 
+  useEffect(() => {
+    if (semesterId === null) {
+      router.back();
+    } else {
+      console.log('semesterId:', semesterId);
+    }
+  }, [semesterId, router]);
+
   if (semesterId === null) {
-    router.back();
-    return;
+    return null;
   }
 
   const queryClient = useQueryClient();
@@ -30,6 +38,7 @@ export default function CourseCreateModal() {
     resolver: zodResolver(courseSchema),
     defaultValues: {
       semesterId: semesterId,
+      name: '',
     },
   });
 
@@ -38,14 +47,18 @@ export default function CourseCreateModal() {
       queryClient.invalidateQueries({
         queryKey: ['get', '/v1/courses/semester/{semesterId}'],
       });
+      router.back();
+    },
+    onError: (error) => {
+      console.error('Error creating course:', error);
     },
   });
 
   const onSubmit = (data: CourseSchema) => {
+    console.log('Form data:', data);
     createSemester.mutate({
       body: data,
     });
-    router.back();
   };
 
   return (
@@ -77,14 +90,14 @@ export default function CourseCreateModal() {
         <div className="flex justify-end gap-2">
           <button
             type="button"
-            className="rounded bg-gray-200 px-4 py-2"
+            className="cursor-pointer rounded bg-gray-200 px-4 py-2"
             onClick={() => router.back()}
           >
             취소
           </button>
           <button
             type="submit"
-            className="rounded bg-blue-600 px-4 py-2 text-white"
+            className="cursor-pointer rounded bg-blue-600 px-4 py-2 text-white"
           >
             {createSemester.isPending ? '생성 중...' : '생성'}
           </button>

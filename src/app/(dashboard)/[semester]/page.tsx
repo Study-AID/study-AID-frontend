@@ -104,7 +104,7 @@ export default function SemesterPage() {
             {/* 예시 비어있을 때 새과목 추가 카드 */}
             <AddCourseCard
               onClick={() =>
-                router.push(`/create/course?semesterId=${semester}/`)
+                router.push(`/create/course?semesterId=${semester}`)
               }
             />
           </div>
