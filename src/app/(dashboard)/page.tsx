@@ -2,16 +2,11 @@
 
 import { api } from '@/api/client';
 import { components } from '@/types/openapi.schema';
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  Transition,
-  TransitionChild,
-} from '@headlessui/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Edit2, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
+import { string } from 'zod';
 
 interface SemesterCardProps {
   semester?: components['schemas']['SemesterResponse'];
@@ -19,9 +14,8 @@ interface SemesterCardProps {
   label?: string;
   isEditing?: boolean;
   draftDisplay?: string;
-  onStartEdit?: () => void;
-  onChange?: (v: string) => void;
-  onSave?: (newValue: string) => void;
+  onStartEdit?: (semesterId: string, currentTitle: string) => void;
+  onSave?: (semesterId: string, newTitle: string) => void;
   onCancel?: () => void;
   onClick?: () => void;
 }
@@ -33,7 +27,6 @@ function SemesterCard({
   isEditing,
   draftDisplay,
   onStartEdit,
-  onChange,
   onSave,
   onCancel,
   onClick,
@@ -55,11 +48,11 @@ function SemesterCard({
           className="inline-block w-max max-w-[12ch] min-w-[4ch] border-b border-gray-400 bg-transparent p-1 text-xl font-semibold focus:outline-none"
           defaultValue={draftDisplay}
           onBlur={(e) => {
-            onSave?.(e.target.value);
+            onSave!(semester!.id!, e.currentTarget.value);
           }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
-              onSave?.(e.currentTarget.value);
+              onSave!(semester!.id!, e.currentTarget.value);
               inputRef.current?.blur();
             }
             if (e.key === 'Escape') {
@@ -87,7 +80,7 @@ function SemesterCard({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onStartEdit?.();
+            onStartEdit!(semester!.id!, semester!.name!);
           }}
           className="absolute top-2 right-2 p-1 text-gray-500 hover:text-gray-700"
         >
@@ -102,7 +95,7 @@ function SemesterCard({
             : 'border border-[#D3D3D3] bg-[#ECECEC] text-gray-700'
         } `}
       >
-        {/* {isAdd ? label : `${semester?.classCount} 3 Classes`} */}3 Classes
+        {isAdd ? label : `3 Classes`}
       </div>
     </div>
   );
@@ -111,6 +104,7 @@ function SemesterCard({
 export default function DashboardPage() {
   const { data, isLoading, error } = api.useQuery('get', '/v1/semesters');
   const router = useRouter();
+  const utils = useQueryClient();
 
   // 날짜 및 학기 정보
   const today = new Date();
@@ -132,17 +126,40 @@ export default function DashboardPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftDisplay, setDraftDisplay] = useState('');
 
+  const updateSemester = api.useMutation('put', '/v1/semesters/{id}', {
+    onSuccess: (data) => {
+      utils.invalidateQueries({ queryKey: ['/v1/semesters'] });
+      setEditingId(null);
+    },
+  });
+
   if (!data || isLoading) {
     return <div>Loading...</div>;
   }
 
   if (error) return `An error occured: ${error}`;
 
-  const startEdit = (s: components['schemas']['SemesterResponse']) => {
-    setEditingId(s.id);
-    setDraftDisplay(s.name);
+  const startEdit = (semesterId: string, currentTitle: string) => {
+    setEditingId(semesterId);
+    setDraftDisplay(currentTitle);
   };
   const cancelEdit = () => setEditingId(null);
+
+  const onSave = (semesterId: string, newTitle: string) => {
+    if (draftDisplay === '') {
+      return;
+    }
+    updateSemester.mutate({
+      params: {
+        path: {
+          id: semesterId,
+        },
+      },
+      body: {
+        name: newTitle,
+      },
+    });
+  };
 
   return (
     <div className="w-full p-8">
@@ -170,11 +187,8 @@ export default function DashboardPage() {
             semester={s}
             isEditing={editingId === s.id}
             draftDisplay={draftDisplay}
-            onStartEdit={() => startEdit(s)}
-            onChange={(v) => setDraftDisplay(v)}
-            onSave={(newDisplay) => {
-              setEditingId(null);
-            }}
+            onStartEdit={startEdit}
+            onSave={onSave}
             onCancel={cancelEdit}
             onClick={() => router.push(`/${s.id}`)}
           />

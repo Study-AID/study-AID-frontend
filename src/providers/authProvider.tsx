@@ -24,21 +24,17 @@ export function createContextWithHook<ContextType>(
   } = options;
 
   const Context = React.createContext<ContextType | undefined>(undefined);
-
   Context.displayName = name;
 
   function useContext() {
     const context = React.useContext(Context);
-
     if (context === undefined) {
       const error = new Error(errorMessage);
-
       error.name = 'ContextError';
       Error.captureStackTrace?.(error, useContext);
       throw error;
     }
-
-    return context;
+    return context as ContextType;
   }
 
   return [
@@ -49,24 +45,19 @@ export function createContextWithHook<ContextType>(
 }
 
 export const [AuthStateContextProvider, useAuthState] = createContextWithHook<{
-  isLoggedIn: boolean;
-  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
+  isLoggedIn: boolean | null;
+  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean | null>>;
 }>({
   name: 'AuthStateContext',
   errorMessage:
-    'useAuthStateContext: `context` is undefined. Seems you forgot to wrap component within <AuthStateProvider />',
+    'useAuthStateContext: `context` is undefined. Forgot to wrap component within <AuthClientProvider>?',
 });
 
 export const AuthClientProvider = ({ children }: PropsWithChildren) => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   return (
-    <AuthStateContextProvider
-      value={{
-        isLoggedIn: isLoggedIn,
-        setIsLoggedIn: setIsLoggedIn,
-      }}
-    >
+    <AuthStateContextProvider value={{ isLoggedIn, setIsLoggedIn }}>
       {children}
     </AuthStateContextProvider>
   );
@@ -75,29 +66,22 @@ export const AuthClientProvider = ({ children }: PropsWithChildren) => {
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const router = useRouter();
   const { isLoggedIn, setIsLoggedIn } = useAuthState();
-
-  const { data: me, isLoading, error } = api.useQuery('get', '/v1/auth/me', {});
+  const { data: me, isLoading } = api.useQuery('get', '/v1/auth/me', {});
 
   useEffect(() => {
     if (isLoading) return;
-
-    if (me) {
-      setIsLoggedIn(true);
-    } else {
-      setIsLoggedIn(false);
-      router.replace('/login');
-    }
+    const loggedIn = !!me;
+    setIsLoggedIn(loggedIn);
+    if (!loggedIn) router.replace('/login');
   }, [isLoading, me, router, setIsLoggedIn]);
 
-  // Loading State
-  if (isLoggedIn === undefined) {
-    // TODO: Add loading state (ex: spinner)
+  if (isLoading || isLoggedIn === null) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
-        <div className="h-32 w-32 animate-spin rounded-full border-t-2 border-b-2 border-gray-900"></div>
+        <div className="h-32 w-32 animate-spin rounded-full border-t-2 border-b-2 border-gray-900" />
       </div>
     );
   }
 
-  return children;
+  return <>{children}</>;
 };

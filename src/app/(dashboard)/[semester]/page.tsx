@@ -1,7 +1,8 @@
 'use client';
 
 import { api } from '@/api/client';
-import { useQuery } from '@tanstack/react-query';
+import { AddCourseCard, CourseCard } from '@/component/CourseCard';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronDown,
   ChevronLeft,
@@ -9,12 +10,18 @@ import {
   Edit2,
   Plus,
 } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function SemesterPage() {
+  const router = useRouter();
   const params = useParams();
+  const utils = useQueryClient();
   // get /v1/semesters/:semester
   const semester = params.semester as string;
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftDisplay, setDraftDisplay] = useState('');
 
   const { data, isLoading, error } = api.useQuery(
     'get',
@@ -28,18 +35,51 @@ export default function SemesterPage() {
     },
   );
 
+  const updateCourse = api.useMutation('put', '/v1/courses/{id}', {
+    onSuccess: (data) => {
+      utils.invalidateQueries({
+        queryKey: ['/v1/courses/semester/{semesterId}'],
+      });
+
+      console.log('invalidate');
+      // setEditingId(null);
+    },
+  });
+
   if (!data || isLoading) {
     return <div>Loading...</div>;
   }
 
   if (error) return `An error occured: ${error}`;
 
+  const startEdit = (courseId: string, currentTitle: string) => {
+    setEditingId(courseId);
+    setDraftDisplay(currentTitle);
+  };
+
+  const cancelEdit = () => setEditingId(null);
+
+  const onSave = (courseId: string, newTitle: string) => {
+    if (draftDisplay === '') {
+      return;
+    }
+    updateCourse.mutate({
+      params: {
+        path: {
+          id: courseId,
+        },
+      },
+      body: {
+        name: newTitle,
+      },
+    });
+  };
+
   return (
-    <main className="flex flex-1 gap-8 overflow-auto p-8">
+    <main className="flex flex-1 gap-8 overflow-auto px-1 py-3">
       {/* 과목 목록 섹션 */}
-      <section className="flex-1">
-        <h2 className="mb-6 text-2xl font-semibold">2024-1</h2>
-        <div className="rounded-lg bg-white p-6 shadow">
+      <section className="flex-1 rounded-lg bg-gray-50 p-6 shadow">
+        <div className="">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-medium">과목 목록</h3>
             <button className="flex items-center text-gray-600 hover:text-gray-800">
@@ -48,11 +88,25 @@ export default function SemesterPage() {
           </div>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {/* 실제 과목 카드 반복 */}
+            {data.courses?.map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                isEditing={editingId === course.id}
+                draftDisplay={draftDisplay}
+                onStartEdit={startEdit}
+                onSave={onSave}
+                onCancel={cancelEdit}
+                onClick={() => router.push(`/${semester}/${course.id}`)}
+              />
+            ))}
+
             {/* 예시 비어있을 때 새과목 추가 카드 */}
-            <button className="flex h-48 flex-col items-center justify-center rounded-lg border-2 border-dashed bg-gray-100 text-gray-400 hover:bg-gray-200">
-              <Plus size={32} />
-              <span className="mt-2">새과목 추가하기</span>
-            </button>
+            <AddCourseCard
+              onClick={() =>
+                router.push(`/create/course?semesterId=${semester}/`)
+              }
+            />
           </div>
         </div>
       </section>

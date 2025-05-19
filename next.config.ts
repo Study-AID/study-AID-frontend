@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://100.122.48.18:8080/api/:path*',
+        destination: 'http://host.docker.internal:8080/api/:path*',
       },
     ];
   },

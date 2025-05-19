@@ -82,6 +82,7 @@ function SemesterTab({
 }) {
   const [editingSemId, setEditingSemId] = useState<string | null>(null);
   const [draftValue, setDraftValue] = useState('');
+  const router = useRouter();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -151,7 +152,14 @@ function SemesterTab({
                     }}
                   />
                 ) : (
-                  <span className="font-semibold">{semester.name}</span>
+                  <span
+                    className="cursor-pointer font-semibold"
+                    onClick={() => {
+                      router.push(`/${semester.id}`);
+                    }}
+                  >
+                    {semester.name}
+                  </span>
                 )}
               </div>
 
@@ -201,6 +209,7 @@ function CourseTab({
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [draftValue, setDraftValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const courseUpdate = api.useMutation('put', '/v1/courses/{id}');
 
@@ -240,7 +249,14 @@ function CourseTab({
             }}
           />
         ) : (
-          <span>{course.name}</span>
+          <span
+            className="cursor-pointer"
+            onClick={() => {
+              router.push(`/${course.semesterId}/${course.id}`);
+            }}
+          >
+            {course.name}
+          </span>
         )}
       </button>
 
