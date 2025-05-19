@@ -201,10 +201,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Create a new lecture
-         * @description Creates a new lecture
-         */
+        /** @description Creates a new lecture */
         post: operations["createLecture"];
         delete?: never;
         options?: never;
@@ -352,6 +349,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["healthCheck"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/courses/semester/{semesterId}": {
         parameters: {
             query?: never;
@@ -421,24 +434,24 @@ export interface components {
              * Format: uuid
              * @description Unique ID of the semester
              */
-            id?: string;
+            id: string;
             /**
              * Format: uuid
              * @description Unique ID of the user
              */
-            userId?: string;
+            userId: string;
             /** @description Name of the semester */
-            name?: string;
+            name: string;
             /**
              * Format: int32
              * @description Year of the semester
              */
-            year?: number;
+            year: number;
             /**
              * @description Season of the semester (SPRING, SUMMER, FALL, WINTER)
              * @enum {string}
              */
-            season?: "spring" | "summer" | "fall" | "winter";
+            season: "spring" | "summer" | "fall" | "winter";
             /**
              * Format: date
              * @description Start date of the semester
@@ -468,12 +481,12 @@ export interface components {
              * Format: date-time
              * @description Creation timestamp of the semester
              */
-            createdAt?: string;
+            createdAt: string;
             /**
              * Format: date-time
              * @description Last update timestamp of the semester
              */
-            updatedAt?: string;
+            updatedAt: string;
         };
         /** @description Update semester grades request */
         UpdateSemesterGradesRequest: {
@@ -526,19 +539,19 @@ export interface components {
              * Format: uuid
              * @description Unique ID of the lecture
              */
-            id?: string;
+            id: string;
             /**
              * Format: uuid
              * @description Unique ID of the course
              */
-            courseId?: string;
+            courseId: string;
             /**
              * Format: uuid
              * @description Unique ID of the user
              */
-            userId?: string;
+            userId: string;
             /** @description Title of the lecture */
-            title?: string;
+            title: string;
             /** @description Path to the lecture material */
             materialPath?: string;
             /** @description Type of the lecture material */
@@ -562,12 +575,12 @@ export interface components {
              * Format: date-time
              * @description Creation timestamp of the lecture
              */
-            createdAt?: string;
+            createdAt: string;
             /**
              * Format: date-time
              * @description Last update timestamp of the lecture
              */
-            updatedAt?: string;
+            updatedAt: string;
         };
         /** @description Lecture update request */
         UpdateLectureDisplayOrderLexRequest: {
@@ -585,19 +598,19 @@ export interface components {
              * Format: uuid
              * @description Unique ID of the course
              */
-            id?: string;
+            id: string;
             /**
              * Format: uuid
              * @description Unique ID of the semester
              */
-            semesterId?: string;
+            semesterId: string;
             /**
              * Format: uuid
              * @description Unique ID of the user
              */
-            userId?: string;
+            userId: string;
             /** @description Name of the course */
-            name?: string;
+            name: string;
             /**
              * Format: float
              * @description Target grade for the course
@@ -617,12 +630,12 @@ export interface components {
              * Format: date-time
              * @description Creation timestamp of the course
              */
-            createdAt?: string;
+            createdAt: string;
             /**
              * Format: date-time
              * @description Last update timestamp of the course
              */
-            updatedAt?: string;
+            updatedAt: string;
         };
         /** @description Course grade update request */
         UpdateCourseGradesRequest: {
@@ -661,22 +674,27 @@ export interface components {
              */
             season?: string;
         };
-        CreateLectureInput: {
-            /** Format: uuid */
-            courseId?: string;
-            /** Format: uuid */
-            userId?: string;
-            title?: string;
-            materialPath?: string;
-            materialType?: string;
-            displayOrderLex?: string;
+        /** @description Lecture creation request */
+        CreateLectureRequest: {
+            /**
+             * Format: uuid
+             * @description ID of the course
+             */
+            courseId: string;
+            /** @description Title of the lecture */
+            title: string;
+            /** Format: binary */
+            file: string;
         };
-        CreateCourseInput: {
-            /** Format: uuid */
-            userId?: string;
-            /** Format: uuid */
-            semesterId?: string;
-            name?: string;
+        /** @description Course creation request */
+        CreateCourseRequest: {
+            /**
+             * Format: uuid
+             * @description ID of the semester
+             */
+            semesterId: string;
+            /** @description Name of the course */
+            name: string;
         };
         EmailSignupRequest: {
             email?: string;
@@ -1502,10 +1520,9 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        /** @description Lecture details (courseId, title) */
-        requestBody: {
+        requestBody?: {
             content: {
-                "application/json": components["schemas"]["CreateLectureInput"];
+                "multipart/form-data": components["schemas"]["CreateLectureRequest"];
             };
         };
         responses: {
@@ -1548,7 +1565,7 @@ export interface operations {
         /** @description Course details (name, semesterId) */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateCourseInput"];
+                "application/json": components["schemas"]["CreateCourseRequest"];
             };
         };
         responses: {
@@ -1794,7 +1811,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description ID of the lecture */
+                /** @description ID of the course */
                 courseId: string;
             };
             cookie?: never;
@@ -1835,6 +1852,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["LectureListResponse"];
+                };
+            };
+        };
+    };
+    healthCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
                 };
             };
         };

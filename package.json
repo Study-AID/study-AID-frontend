@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm with-env next dev --turbopack",
+    "dev": "pnpm with-env next dev",
     "build": "pnpm with-env next build",
     "start": "pnpm with-env next start",
     "lint": "pnpm with-env -v SKIP_ENV_VALIDATION=1 next lint",
     "with-env": "dotenv -e .env.development --",
-    "openapi:generate": "openapi-typescript http://100.122.48.18:8080/api/api-docs?format=openapi -o ./src/types/openapi.schema.d.ts"
+    "openapi:generate": "openapi-typescript http://host.docker.internal:8080/api/api-docs?format=openapi -o ./src/types/openapi.schema.d.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.2",
