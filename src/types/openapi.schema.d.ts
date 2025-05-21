@@ -558,6 +558,7 @@ export interface components {
             materialType?: string;
             /** @description Display order lexicographically */
             displayOrderLex?: string;
+            parsedText?: components["schemas"]["ParsedText"];
             /** @description Notes associated with the lecture */
             note?: {
                 [key: string]: Record<string, never>;
@@ -581,6 +582,17 @@ export interface components {
              * @description Last update timestamp of the lecture
              */
             updatedAt: string;
+        };
+        ParsedPage: {
+            text?: string;
+            /** Format: int32 */
+            page_number?: number;
+        };
+        /** @description Parsed text from PDF */
+        ParsedText: {
+            pages?: components["schemas"]["ParsedPage"][];
+            /** Format: int32 */
+            total_pages?: number;
         };
         /** @description Lecture update request */
         UpdateLectureDisplayOrderLexRequest: {
