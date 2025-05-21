@@ -1,96 +1,29 @@
 'use client';
 
 import { api } from '@/api/client';
-import {
-  LectureUploadProvider,
-  useLectureUpload,
-} from '@/providers/uploadProvider';
-import { useQuery } from '@tanstack/react-query';
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Edit2,
-  FileText,
-  LayoutGrid,
-  Menu,
-  MessageCircle,
-  Plus,
-} from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { LayoutGrid, Plus } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { useMemo, useState } from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { LectureList } from './_components/lecture';
 
 export default function CoursePage() {
   const params = useParams();
   const courseId = params.course as string;
+  const semesterId = params.semester as string;
 
-  return (
-    <LectureUploadProvider courseId={courseId}>
-      <CourseContent />
-    </LectureUploadProvider>
-  );
+  return <CourseContent courseId={courseId} semesterId={semesterId} />;
 }
 
-function CourseTab({
-  title,
-  subtitle,
-  onMenuClick,
-  onDocumentClick,
-  onGridClick,
-  onCommentClick,
+function CourseContent({
+  courseId,
+  semesterId,
 }: {
-  title: string;
-  subtitle?: string;
-  onMenuClick?: () => void;
-  onDocumentClick?: () => void;
-  onGridClick?: () => void;
-  onCommentClick?: () => void;
+  courseId: string;
+  semesterId: string;
 }) {
-  return (
-    <section className="rounded-lg bg-white shadow">
-      <header className="flex items-center justify-between px-4 py-3">
-        <div>
-          <h3 className="text-lg font-medium text-gray-800">{title}</h3>
-          {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
-        </div>
-        <nav className="flex items-center gap-x-6 text-gray-600">
-          <Menu
-            className="cursor-pointer hover:text-gray-800"
-            size={16}
-            onClick={onMenuClick}
-          />
-          <FileText
-            className="cursor-pointer hover:text-gray-800"
-            size={16}
-            onClick={onDocumentClick}
-          />
-          <LayoutGrid
-            className="cursor-pointer hover:text-gray-800"
-            size={16}
-            onClick={onGridClick}
-          />
-          <MessageCircle
-            className="cursor-pointer hover:text-gray-800"
-            size={16}
-            onClick={onCommentClick}
-          />
-        </nav>
-      </header>
-    </section>
-  );
-}
-
-function CourseContent() {
-  const router = useRouter();
-  const { courseId, setFile } = useLectureUpload();
-
-  const handleOpen = () => router.push(`/create/lecture?courseId=${courseId}`);
-  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const dropped = e.dataTransfer.files[0];
-    setFile(dropped);
-    router.push(`/create/lecture?courseId=${courseId}`);
-  };
+  const [search, setSearch] = useState('');
 
   const { data, isLoading, error } = api.useQuery(
     'get',
@@ -104,41 +37,36 @@ function CourseContent() {
     },
   );
 
-  if (!data || isLoading) {
+  const lectures = useMemo(() => {
+    if (!data || isLoading || !data.lectures) return [];
+
+    if (search === '') return data.lectures;
+
+    return data.lectures.filter((lecture) =>
+      lecture.title.toLowerCase().includes(search.toLowerCase()),
+    );
+  }, [data, isLoading, search]);
+
+  if (!data || isLoading || !data.lectures) {
     return <div>Loading...</div>;
   }
 
   if (error) return `An error occured: ${error}`;
+
   return (
-    <main className="grid flex-1 grid-cols-[2fr_1fr] gap-6 overflow-auto p-8">
+    <main className="grid flex-1 grid-cols-[1.5fr_1fr] gap-6 overflow-auto">
       <div className="space-y-6">
-        <section
-          className="rounded-lg bg-neutral-100 shadow"
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-        >
-          <header className="flex items-center justify-between border-b px-6 py-4">
-            <h2 className="font-medium">강의 목록</h2>
-            <Plus
-              className="cursor-pointer text-gray-600 hover:text-gray-800"
-              onClick={handleOpen}
-            />
-          </header>
-          <div className="rounded-b-lg border-2 border-dashed border-gray-300 p-3 text-center text-gray-500">
-            {/* <p className="mb-2">
-              업로드할 강의 자료{' '}
-              <span className="text-indigo-600">파일을 선택</span>하거나 드래그
-              앤 드롭 하세요.
-            </p>
-            <p className="text-sm">
-              지원되는 파일 형식: PDF, PPTX, TXT, Markdown, MP3
-            </p> */}
+        <DndProvider backend={HTML5Backend}>
+          <LectureList
+            courseId={courseId}
+            semesterId={semesterId}
+            initialLectures={lectures}
+            search={search}
+            setSearch={setSearch}
+          />
+        </DndProvider>
 
-            <CourseTab title="강의 자료1" subtitle="2025.05.15" />
-          </div>
-        </section>
-
-        <section className="rounded-lg bg-neutral-100 shadow">
+        <section className="rounded-lg bg-[#F7F7F7] shadow">
           <header className="flex items-center justify-between border-b px-6 py-4">
             <h2 className="font-medium">모의 시험</h2>
             <Plus className="cursor-pointer text-gray-600 hover:text-gray-800" />
@@ -151,7 +79,7 @@ function CourseContent() {
           </div>
         </section>
 
-        <section className="rounded-lg bg-neutral-100 shadow">
+        <section className="rounded-lg bg-[#F7F7F7] shadow">
           <header className="flex items-center justify-between border-b px-6 py-4">
             <h2 className="font-medium">활동 로그</h2>
             <LayoutGrid className="cursor-pointer text-gray-600 hover:text-gray-800" />
@@ -163,21 +91,21 @@ function CourseContent() {
       </div>
 
       <div className="space-y-6">
-        <section className="rounded-lg bg-neutral-100 p-4 shadow">
+        <section className="rounded-lg bg-[#F7F7F7] p-4 shadow">
           <h3 className="mb-4 font-medium">퀴즈 통계</h3>
           <div className="flex h-24 items-center justify-center text-gray-400">
             퀴즈 통계가 없습니다.
           </div>
         </section>
 
-        <section className="rounded-lg bg-neutral-100 p-4 shadow">
+        <section className="rounded-lg bg-[#F7F7F7] p-4 shadow">
           <h3 className="mb-4 font-medium">약점 분석 및 공부 추천</h3>
           <div className="flex h-24 items-center justify-center text-gray-400">
             활동 내역이 없습니다.
           </div>
         </section>
 
-        <section className="rounded-lg bg-neutral-100 p-4 shadow">
+        <section className="rounded-lg bg-[#F7F7F7] p-4 shadow">
           <h3 className="mb-4 font-medium">학점 관리</h3>
           <div className="grid grid-cols-3 gap-4 text-center">
             {['목표 성적', '취득 성적', '이수 학점'].map((label) => (
@@ -191,7 +119,7 @@ function CourseContent() {
           </div>
         </section>
 
-        <section className="rounded-lg bg-neutral-100 shadow">
+        <section className="rounded-lg bg-[#F7F7F7] shadow">
           <header className="flex items-center justify-between border-b px-6 py-4">
             <h3 className="font-medium">성과 기록</h3>
             <Plus className="cursor-pointer text-gray-600 hover:text-gray-800" />

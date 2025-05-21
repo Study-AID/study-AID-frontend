@@ -3,11 +3,6 @@
 import { api } from '@/api/client';
 import { components } from '@/types/openapi.schema';
 import {
-  Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
-} from '@headlessui/react';
-import {
   BookOpen,
   Calendar,
   ChevronDown,
@@ -15,260 +10,217 @@ import {
   Menu as MenuIcon,
   Plus,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import React, { useMemo } from 'react';
 import { SearchInput } from './searchInput';
 import { UserPlaceholder } from './UserPlaceholder';
 
 export default function Sidebar() {
   const router = useRouter();
-  const { data: semestersData, isLoading: loadingSemesters } = api.useQuery(
-    'get',
-    '/v1/semesters',
-  );
+  const { semester: semId, course: crsId, lecture: lecId } = useParams();
 
-  const semesters = useMemo(() => {
-    if (semestersData?.semesters && semestersData.semesters.length > 0) {
-      return semestersData.semesters;
-    }
-    return null;
-  }, [semestersData]);
-
-  if (loadingSemesters) {
-    return null;
-  }
+  // depth: 0 = home, 1 = semester, 2 = course, 3 = lecture
+  const depth = useMemo(() => {
+    if (lecId) return 3;
+    if (crsId) return 2;
+    if (semId) return 1;
+    return 0;
+  }, [semId, crsId, lecId]);
 
   return (
-    <aside className="flex h-full w-60 flex-col border-r border-gray-200 bg-white p-4">
-      <div className="mb-6 flex items-center justify-between">
-        <span className="text-xl font-bold italic">Study AID</span>
+    <aside className="flex h-full w-60 flex-col border-r bg-white">
+      <div className="flex items-center justify-between p-4">
+        <span className="text-lg font-bold">Study AID</span>
         <button className="rounded p-1 hover:bg-gray-100">
           <MenuIcon size={20} />
         </button>
       </div>
-
-      <div className="mb-6">
+      <div className="mb-4 px-4">
         <UserPlaceholder />
       </div>
-
-      <div className="mb-6">
-        <SearchInput placeholder="강의 검색..." />
+      <div className="mb-4 px-4">
+        <SearchInput placeholder="검색..." />
       </div>
 
-      {semesters ? (
-        semesters.map((sem) => <SemesterTab key={sem.id} semester={sem} />)
-      ) : (
-        <div className="flex h-full items-center justify-center">
-          <span className="text-gray-500">등록된 학기가 없습니다.</span>
-        </div>
-      )}
-
-      <button
-        className="mt-4 flex items-center justify-center gap-2 rounded-md bg-blue-600 py-2 text-white hover:bg-blue-700"
-        onClick={() => {
-          router.push('/create/semester');
-        }}
-      >
-        <Plus size={24} />
-      </button>
+      <SemesterList
+        depth={depth}
+        activeSem={semId || null}
+        activeCourse={crsId || null}
+        activeLecture={lecId || null}
+      />
     </aside>
   );
 }
 
-function SemesterTab({
-  semester,
-}: {
-  semester: components['schemas']['SemesterResponse'];
-}) {
-  const [editingSemId, setEditingSemId] = useState<string | null>(null);
-  const [draftValue, setDraftValue] = useState('');
+interface SemesterListProps {
+  depth: number;
+  activeSem: string | null;
+  activeCourse: string | null;
+  activeLecture: string | null;
+}
+
+function SemesterList({
+  depth,
+  activeSem,
+  activeCourse,
+  activeLecture,
+}: SemesterListProps) {
   const router = useRouter();
+  const { data } = api.useQuery('get', '/v1/semesters');
+  const semesters = data?.semesters || [];
 
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const { data: coursesData, isLoading: loadingCourses } = api.useQuery(
-    'get',
-    '/v1/courses/semester/{semesterId}',
-    {
-      params: {
-        path: {
-          semesterId: semester.id!,
-        },
-      },
-    },
-  );
-
-  const courses = useMemo(() => {
-    if (coursesData?.courses && coursesData.courses.length > 0) {
-      return coursesData.courses;
-    }
-    return null;
-  }, [coursesData]);
-
-  const semesterUpdate = api.useMutation('put', '/v1/semesters/{id}');
-
-  useEffect(() => {
-    if (inputRef.current) inputRef.current.focus();
-  }, [editingSemId]);
-
-  if (loadingCourses) {
-    return null;
-  }
-
-  const saveSemesterLabel = (id: string) => {
-    if (draftValue) {
-      semesterUpdate.mutate({
-        params: {
-          path: {
-            id,
-          },
-        },
-        body: {
-          name: draftValue,
-        },
-      });
-    }
-    setEditingSemId(null);
-  };
+  const list =
+    depth >= 2 && activeSem
+      ? semesters.filter((s) => s.id === activeSem)
+      : semesters;
 
   return (
-    <div className="flex- mb-3 h-fit space-y-2 overflow-y-auto">
-      <Disclosure key={semester.id} defaultOpen>
-        {({ open }) => (
-          <div className="rounded-lg border border-gray-200">
-            <DisclosureButton className="flex w-full items-center justify-between px-3 py-2">
+    <div className="flex-1 overflow-y-auto px-2">
+      {list.map((sem) => {
+        const isActiveSem = sem.id === activeSem;
+        return (
+          <div key={sem.id} className="mb-2">
+            <div
+              className={`flex cursor-pointer items-center justify-between rounded-md px-3 py-2 ${isActiveSem ? 'bg-[#5971E7] text-white opacity-[73]' : 'bg-white hover:bg-gray-100'} `}
+              onClick={() => router.push(isActiveSem ? '/' : `/${sem.id}`)}
+            >
               <div className="flex items-center gap-2">
-                <Calendar size={16} />
-                {editingSemId === semester.id ? (
-                  <input
-                    ref={inputRef}
-                    className="w-20 border-b border-gray-400 bg-transparent p-0 font-semibold focus:outline-none"
-                    value={draftValue}
-                    onChange={(e) => setDraftValue(e.target.value)}
-                    onBlur={() => saveSemesterLabel(semester.id!)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') saveSemesterLabel(semester.id!);
-                      if (e.key === 'Escape') setEditingSemId(null);
-                    }}
-                  />
-                ) : (
-                  <span
-                    className="cursor-pointer font-semibold"
-                    onClick={() => {
-                      router.push(`/${semester.id}`);
-                    }}
-                  >
-                    {semester.name}
-                  </span>
-                )}
+                <Calendar size={18} />
+                <span className="truncate font-medium">{sem.name}</span>
               </div>
+              <ChevronDown
+                size={20}
+                className={`transition-transform ${isActiveSem ? 'rotate-180' : ''}`}
+              />
+            </div>
 
-              <div className="flex items-center gap-1">
-                {/* 편집 버튼 */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDraftValue(semester.name!);
-                    setEditingSemId(semester.id!);
-                  }}
-                  className="p-1 text-gray-500 hover:text-gray-700"
-                >
-                  <Edit2 size={14} />
-                </button>
-
-                <ChevronDown
-                  size={16}
-                  className={`${open ? 'rotate-180' : ''} transform cursor-pointer transition-transform`}
-                />
-              </div>
-            </DisclosureButton>
-
-            <DisclosurePanel className="space-y-1 px-5 pb-2">
-              {courses?.map((course) => (
-                <CourseTab key={course.id} course={course} />
-              )) ?? (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">
-                    등록된 강의가 없습니다.
-                  </span>
-                </div>
-              )}
-            </DisclosurePanel>
+            {isActiveSem && (
+              <CourseList
+                semesterId={sem.id}
+                activeCourse={activeCourse}
+                activeLecture={activeLecture}
+                depth={depth}
+              />
+            )}
           </div>
-        )}
-      </Disclosure>
+        );
+      })}
+
+      <button
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#5971E7] py-2 text-white opacity-[73] hover:opacity-90"
+        onClick={() => router.push('/create/semester')}
+      >
+        <Plus size={18} />
+        <span>학기 추가</span>
+      </button>
     </div>
   );
 }
 
-function CourseTab({
-  course,
-}: {
-  course: components['schemas']['CourseResponse'];
-}) {
-  const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
-  const [draftValue, setDraftValue] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
+interface CourseListProps {
+  semesterId: string;
+  activeCourse: string | null;
+  activeLecture: string | null;
+  depth: number;
+}
+
+function CourseList({
+  semesterId,
+  activeCourse,
+  activeLecture,
+  depth,
+}: CourseListProps) {
   const router = useRouter();
-
-  const courseUpdate = api.useMutation('put', '/v1/courses/{id}');
-
-  const saveCourseName = (semId: string, courseId: string) => {
-    if (draftValue) {
-      courseUpdate.mutate({
-        params: {
-          path: {
-            id: courseId,
-          },
-        },
-        body: {
-          name: draftValue,
-        },
-      });
-      setEditingCourseId(null);
-    }
-  };
+  const { data } = api.useQuery('get', '/v1/courses/semester/{semesterId}', {
+    params: { path: { semesterId } },
+  });
+  const courses = data?.courses || [];
 
   return (
-    <div key={course.id} className="flex items-center justify-between">
-      <button className="flex items-center gap-2 rounded px-2 py-1 text-sm font-semibold text-gray-700 hover:bg-gray-100">
-        <BookOpen size={16} />
+    <div className="mt-2 space-y-1 pl-6">
+      {courses.map((course) => {
+        const isActiveCourse = course.id === activeCourse;
+        return (
+          <div key={course.id}>
+            <div
+              className={`flex cursor-pointer items-center justify-between rounded-md px-2 py-1 ${isActiveCourse ? 'bg-indigo-50 font-semibold text-indigo-700' : 'bg-white hover:bg-gray-100'} `}
+            >
+              <button
+                className="flex w-full items-center gap-2 truncate text-sm"
+                onClick={() => router.push(`/${semesterId}/${course.id}`)}
+              >
+                <BookOpen size={16} />
+                {course.name}
+              </button>
+              <Edit2
+                size={16}
+                className="p-1 hover:text-gray-600"
+                onClick={() => {
+                  // TODO: implement course edit
+                }}
+              />
+            </div>
 
-        {/* 강의명 or 편집 input */}
-        {editingCourseId === course.id ? (
-          <input
-            ref={inputRef}
-            className="w-20 border-b border-gray-400 bg-transparent p-0 text-sm focus:outline-none"
-            value={draftValue}
-            onChange={(e) => setDraftValue(e.target.value)}
-            onBlur={() => saveCourseName(course.semesterId!, course.id!)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter')
-                saveCourseName(course.semesterId!, course.id!);
-              if (e.key === 'Escape') setEditingCourseId(null);
-            }}
-          />
-        ) : (
-          <span
-            className="cursor-pointer"
-            onClick={() => {
-              router.push(`/${course.semesterId}/${course.id}`);
-            }}
-          >
-            {course.name}
-          </span>
-        )}
-      </button>
+            {isActiveCourse && depth >= 2 && (
+              <LectureList
+                semesterId={semesterId}
+                courseId={course.id}
+                activeLecture={activeLecture}
+              />
+            )}
+          </div>
+        );
+      })}
 
-      {/* 강의 편집 버튼 */}
       <button
-        onClick={() => {
-          setDraftValue(course.name!);
-          setEditingCourseId(course.id!);
-        }}
-        className="p-1 text-gray-400 hover:text-gray-600"
+        className="mt-2 flex w-full items-center justify-center gap-2 rounded-md bg-indigo-50 py-1 text-sm text-indigo-700 hover:bg-indigo-100"
+        onClick={() => router.push(`/create/course?semesterId=${semesterId}`)}
       >
-        <Edit2 size={14} />
+        <Plus size={16} />
+        <span>과목 추가</span>
+      </button>
+    </div>
+  );
+}
+
+interface LectureListProps {
+  semesterId: string;
+  courseId: string;
+  activeLecture: string | null;
+}
+
+function LectureList({
+  semesterId,
+  courseId,
+  activeLecture,
+}: LectureListProps) {
+  const router = useRouter();
+  const { data } = api.useQuery('get', '/v1/lectures/course/{courseId}', {
+    params: { path: { courseId } },
+  });
+  const lectures = data?.lectures || [];
+
+  return (
+    <div className="mt-1 space-y-1 pl-8">
+      {lectures.map((lec) => {
+        const isActiveLec = lec.id === activeLecture;
+        return (
+          <div
+            key={lec.id}
+            className={`flex cursor-pointer items-center rounded-md px-2 py-1 ${isActiveLec ? 'bg-indigo-100 font-medium text-indigo-800' : 'bg-white hover:bg-gray-100'} `}
+            onClick={() => router.push(`/${semesterId}/${courseId}/${lec.id}`)}
+          >
+            <span className="truncate text-sm">{lec.title}</span>
+          </div>
+        );
+      })}
+
+      <button
+        className="mt-1 flex w-full items-center justify-center gap-2 rounded-md bg-indigo-100 py-1 text-sm text-indigo-800 hover:bg-indigo-200"
+        onClick={() => router.push(`/create/lecture?courseId=${courseId}`)}
+      >
+        <Plus size={14} />
+        <span>강의 추가</span>
       </button>
     </div>
   );

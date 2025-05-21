@@ -10,7 +10,6 @@ import React, {
 } from 'react';
 
 export interface LectureUploadData {
-  courseId: string;
   lectureName: string;
   file: File | null;
   setLectureName: (name: string) => void;
@@ -22,13 +21,7 @@ const LectureUploadContext = createContext<LectureUploadData | undefined>(
   undefined,
 );
 
-export function LectureUploadProvider({
-  children,
-  courseId,
-}: {
-  children: ReactNode;
-  courseId: string;
-}) {
+export function LectureUploadProvider({ children }: { children: ReactNode }) {
   const [lectureName, setLectureName] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
 
@@ -39,7 +32,7 @@ export function LectureUploadProvider({
 
   return (
     <LectureUploadContext.Provider
-      value={{ courseId, lectureName, file, setLectureName, setFile, clear }}
+      value={{ lectureName, file, setLectureName, setFile, clear }}
     >
       {children}
     </LectureUploadContext.Provider>

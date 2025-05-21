@@ -1,16 +1,13 @@
 'use client';
 
 import { api } from '@/api/client';
-import {
-  LectureUploadProvider,
-  useLectureUpload,
-} from '@/providers/uploadProvider';
+import { useLectureUpload } from '@/providers/uploadProvider';
 import { components } from '@/types/openapi.schema';
 import { DialogTitle } from '@headlessui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChangeEvent } from 'react';
+import { ChangeEvent, useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import ModalWrapper from '../../_components/ModalWrapper';
 import { lectureSchema, LectureSchema } from './schema';
@@ -24,24 +21,17 @@ export default function LectureCreateModal() {
     return null;
   }
 
-  return (
-    <LectureUploadProvider courseId={courseId}>
-      <LectureCreateModalContent />
-    </LectureUploadProvider>
-  );
+  return <LectureCreateModalContent courseId={courseId} />;
 }
 
-function LectureCreateModalContent() {
+function LectureCreateModalContent({ courseId }: { courseId: string }) {
   const router = useRouter();
-  const { courseId, file, setFile, clear } = useLectureUpload();
-
-  if (courseId === null) {
-    return null;
-  }
+  const { file, setFile, clear } = useLectureUpload();
 
   const queryClient = useQueryClient();
 
   const {
+    reset,
     control,
     register,
     handleSubmit,
@@ -51,9 +41,12 @@ function LectureCreateModalContent() {
     resolver: zodResolver(lectureSchema),
     defaultValues: {
       courseId: courseId,
-      file: file ?? undefined,
     },
   });
+
+  useEffect(() => {
+    console.log('file changed:', file);
+  }, [file, courseId, reset]);
 
   const createLecture = api.useMutation('post', '/v1/lectures', {
     onSuccess: () => {
@@ -71,15 +64,13 @@ function LectureCreateModalContent() {
     formData.append('file', data.file as File);
 
     createLecture.mutate({
+      headers: {
+        Accept: '*/*',
+        'Content-Type': undefined,
+      },
       body: formData as unknown as components['schemas']['CreateLectureRequest'],
     });
     router.back();
-  };
-
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0] ?? null;
-    setFile(selected);
-    setValue('file', selected as any, { shouldValidate: true });
   };
 
   const handleDrop = (e: React.DragEvent<HTMLFormElement>) => {
