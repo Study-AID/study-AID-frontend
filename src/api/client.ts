@@ -11,12 +11,46 @@ const apiMiddleware: Middleware = {
       request.headers.set('Authorization', `Bearer ${accessToken}`);
     }
   },
-  onResponse({ response }) {
+  onResponse({ response, request }) {
     // Handle the response
     if (response.status === 401) {
       sessionStorage.removeItem('access_token');
       window.location.href = '/login';
       return;
+    } else if (response.status === 403) {
+      //check access token and refresh token
+      // if refresh token is expired redirect to login
+      // if refresh token is valid get new access token and set it in session storage
+      // and retry the request
+      const refreshToken = sessionStorage.getItem('refresh_token');
+
+      if (refreshToken) {
+        return fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/auth/refresh`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${refreshToken}`,
+          },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.access_token) {
+              sessionStorage.setItem('access_token', data.access_token);
+              request.headers.set(
+                'Authorization',
+                `Bearer ${data.access_token}`,
+              );
+              return fetch(request);
+            } else {
+              sessionStorage.removeItem('access_token');
+              window.location.href = '/login';
+            }
+          });
+      } else {
+        sessionStorage.removeItem('access_token');
+        window.location.href = '/login';
+      }
     }
   },
   onError({ error }) {
@@ -28,7 +62,7 @@ const apiMiddleware: Middleware = {
 const apiClient = createFetchClient<paths>({
   baseUrl: process.env.NEXT_PUBLIC_API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    // 'Content-Type': 'application/json',
     Accept: 'application/json',
   },
   credentials: 'include',

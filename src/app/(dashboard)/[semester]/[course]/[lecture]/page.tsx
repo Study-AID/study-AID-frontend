@@ -5,6 +5,7 @@ import {
   LectureUploadProvider,
   useLectureUpload,
 } from '@/providers/uploadProvider';
+import { Tab, TabGroup, TabList } from '@headlessui/react';
 import { useQuery } from '@tanstack/react-query';
 import {
   ChevronDown,
@@ -12,22 +13,154 @@ import {
   ChevronRight,
   Edit2,
   LayoutGrid,
+  MessageCircle,
   Plus,
 } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-export default function CoursePage() {
+const tabs = [
+  {
+    label: '강의 노트',
+    prefix: 'note',
+  },
+  {
+    label: '강의 퀴즈',
+    prefix: 'quiz',
+  },
+  {
+    label: 'QnA 기록',
+    prefix: 'qna',
+  },
+];
+
+export default function LecturePage() {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const searchParams = useSearchParams();
+  const paramPrefix = searchParams.get('tab');
+  const initialPrefix = tabs.some((t) => t.prefix === paramPrefix)
+    ? (paramPrefix as string)
+    : tabs[0].prefix;
+  const [activePrefix, setActivePrefix] = useState<string>(initialPrefix);
+
   const params = useParams();
-  const courseId = params.course as string;
+  const { courseId, lectureId } = params as {
+    courseId: string;
+    lectureId: string;
+  };
+
+  const { data, isLoading, error } = api.useQuery('get', '/v1/lectures/{id}', {
+    params: {
+      path: {
+        id: lectureId,
+      },
+    },
+  });
+
+  useEffect(() => {
+    if (paramPrefix && tabs.some((t) => t.prefix === paramPrefix)) {
+      setActivePrefix(paramPrefix);
+    }
+  }, [paramPrefix]);
+
+  const handleTabClick = (prefix: string) => {
+    setActivePrefix(prefix);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', prefix);
+    router.replace(`${pathname}?${params.toString()}`, { shallow: true });
+  };
 
   return (
-    <LectureUploadProvider courseId={courseId}>
-      <CourseContent />
-    </LectureUploadProvider>
+    <div className="flex h-screen flex-col">
+      {/* Top Tabs */}
+      <TabGroup>
+        <TabList>
+          {tabs.map((tab) => (
+            <Tab
+              key={tab.prefix}
+              className={`-mb-px px-4 py-2 font-medium focus:outline-none ${
+                activePrefix === tab.prefix
+                  ? 'border-b-2 border-indigo-600 text-indigo-600'
+                  : 'border-b-2 border-transparent text-gray-600 hover:text-gray-800'
+              }`}
+              onClick={() => handleTabClick(tab.prefix)}
+            >
+              {tab.label}
+            </Tab>
+          ))}
+        </TabList>
+      </TabGroup>
+      {/* <div className="flex border-b bg-white">
+        {tabs.map((tab) => (
+          <button
+            key={tab.prefix}
+            onClick={() => handleTabClick(tab.prefix)}
+            className={`-mb-px px-4 py-2 font-medium focus:outline-none ${
+              activePrefix === tab.prefix
+                ? 'border-b-2 border-indigo-600 text-indigo-600'
+                : 'border-b-2 border-transparent text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div> */}
+
+      {/* Main Content Area */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Panel */}
+        <div className="relative w-3/4 overflow-auto border-r p-4">
+          {/* PDF Filename */}
+          <div className="mb-4 text-sm font-medium text-gray-500">
+            array_and_list_02.pdf
+          </div>
+
+          {/* Lecture Notes Cards */}
+          <div className="space-y-4">
+            {[...Array(2)].map((_, idx) => (
+              <div
+                key={idx}
+                className="relative rounded-lg border bg-white p-4 shadow-sm"
+              >
+                <p className="leading-relaxed text-gray-800">
+                  Lorem Ipsum is simply dummy text of the printing and
+                  typesetting industry. Lorem Ipsum has been the industry's
+                  standard dummy text ever since the 1500s...
+                </p>
+
+                {/* Floating Ask Button on Second Card */}
+                {idx === 1 && (
+                  <button className="absolute bottom-4 left-4 flex items-center rounded-md bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700 focus:outline-none">
+                    <MessageCircle className="mr-1 h-4 w-4" />
+                    질문하기
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Panel */}
+        <div className="w-1/4 overflow-auto p-4">
+          <div className="space-y-3">
+            {[...Array(4)].map((_, idx) => (
+              <div key={idx} className="h-6 rounded bg-gray-200"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
-function CourseContent() {
+function LectureContent() {
   const router = useRouter();
   const { courseId, setFile } = useLectureUpload();
 
@@ -61,7 +194,7 @@ function CourseContent() {
     <main className="grid flex-1 grid-cols-[2fr,1fr] gap-6 overflow-auto p-8">
       <div className="space-y-6">
         <section
-          className="rounded-lg bg-white shadow"
+          className="cursor-pointer rounded-lg bg-white shadow"
           onClick={handleOpen}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
