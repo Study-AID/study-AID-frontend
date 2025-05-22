@@ -2,14 +2,21 @@
 
 import { api } from '@/api/client';
 import { TabPanel } from '@headlessui/react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import NoteComponent from './note';
 import QnAHistoryComponent from './qnaHistory';
+import { QuizComponent, QuizCreateComponent, QuizSolveComponent } from './quiz';
 
 export default function LecturePage() {
   const params = useParams();
+  const semesterId = params.semester as string;
+  const courseId = params.course as string;
   const lectureId = params.lecture as string;
   const tab = params.tab as string;
+
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+  const create = searchParams.get('create');
 
   const { data, isLoading, error } = api.useQuery('get', '/v1/lectures/{id}', {
     params: {
@@ -32,14 +39,18 @@ export default function LecturePage() {
   }
 
   if (tab === 'quiz') {
+    if (create) {
+      return <QuizCreateComponent lectureId={lectureId} />;
+    } else if (id) {
+      return <QuizSolveComponent quizId={id} />;
+    }
+
     return (
-      <div>
-        <div className="flex h-full items-center justify-center">
-          <span className="text-lg font-semibold text-gray-700">
-            강의 퀴즈는 준비중입니다.
-          </span>
-        </div>
-      </div>
+      <QuizComponent
+        semesterId={semesterId}
+        courseId={courseId}
+        lectureId={lectureId}
+      />
     );
   }
 
