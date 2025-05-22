@@ -17,6 +17,7 @@ export default function LecturePage() {
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
   const create = searchParams.get('create');
+  const p = searchParams.get('p');
 
   const { data, isLoading, error } = api.useQuery('get', '/v1/lectures/{id}', {
     params: {
@@ -42,7 +43,7 @@ export default function LecturePage() {
     if (create) {
       return <QuizCreateComponent lectureId={lectureId} />;
     } else if (id) {
-      return <QuizSolveComponent quizId={id} />;
+      return <QuizSolveComponent quizId={id} problem={Number(p!)} />;
     }
 
     return (
