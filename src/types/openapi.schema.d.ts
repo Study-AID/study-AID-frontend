@@ -288,6 +288,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/qna/chats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * QnA 채팅방 생성
+         * @description 강의 자료를 기반으로 새로운 QnA 채팅방을 생성합니다.
+         */
+        post: operations["createChat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/qna/chats/{chatId}/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 질문하기
+         * @description QnA 채팅방에 질문을 하고 강의 자료를 기반으로 답변을 받습니다.
+         */
+        post: operations["askQuestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/lectures": {
         parameters: {
             query?: never;
@@ -473,6 +513,26 @@ export interface paths {
          * @description Retrieve quizzes associated with a specific lecture ID.
          */
         get: operations["getQuizzesByLecture"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/qna/chats/{chatId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 특정 QnA 채팅방 조회 (모든 메시지 조회)
+         * @description 특정 QnA 채팅방의 모든 메시지를 조회합니다.
+         */
+        get: operations["readQnaChat"];
         put?: never;
         post?: never;
         delete?: never;
@@ -738,6 +798,7 @@ export interface components {
             };
             /** @enum {string} */
             summaryStatus?: "not_started" | "in_progress" | "completed";
+            isVectorized?: boolean;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
@@ -1214,6 +1275,28 @@ export interface components {
              */
             updatedAt?: string;
         };
+        CreateQnaChatResponse: {
+            /** Format: uuid */
+            chatId: string;
+        };
+        CreateQnaChatRequest: {
+            /** Format: uuid */
+            lectureId?: string;
+        };
+        QnaChatMessageResponse: {
+            role: string;
+            content: string;
+            references: components["schemas"]["ReferenceChunkResponse"][];
+            recommendedQuestions: string[];
+        };
+        ReferenceChunkResponse: {
+            text?: string;
+            /** Format: int32 */
+            page?: number;
+        };
+        QnaChatMessageRequest: {
+            question?: string;
+        };
         /** @description Lecture creation request */
         CreateLectureRequest: {
             /**
@@ -1346,6 +1429,15 @@ export interface components {
         QuizListResponse: {
             /** @description List of quizzes response */
             quizzes?: components["schemas"]["QuizResponse"][];
+        };
+        MessageItem: {
+            role: string;
+            content: string;
+        };
+        ReadQnaChatResponse: {
+            /** Format: uuid */
+            chatId: string;
+            messages: components["schemas"]["MessageItem"][];
         };
         /** @description List of lectures response */
         LectureListResponse: {
@@ -2568,6 +2660,101 @@ export interface operations {
             };
         };
     };
+    createChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateQnaChatRequest"];
+            };
+        };
+        responses: {
+            /** @description 채팅방 생성 성공 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CreateQnaChatResponse"];
+                };
+            };
+            /** @description 잘못된 요청 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": unknown;
+                };
+            };
+            /** @description 강의 자료나 사용자를 찾을 수 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": unknown;
+                };
+            };
+        };
+    };
+    askQuestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QnaChatMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description 질문 처리 성공 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QnaChatMessageResponse"];
+                };
+            };
+            /** @description 잘못된 요청 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": unknown;
+                };
+            };
+            /** @description 접근 권한 없음 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": unknown;
+                };
+            };
+            /** @description 채팅방을 찾을 수 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": unknown;
+                };
+            };
+        };
+    };
     createLecture: {
         parameters: {
             query?: never;
@@ -2994,6 +3181,46 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["QuizListResponse"];
+                };
+            };
+        };
+    };
+    readQnaChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 채팅 메시지 조회 성공 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReadQnaChatResponse"];
+                };
+            };
+            /** @description 접근 권한 없음 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": unknown;
+                };
+            };
+            /** @description 채팅방을 찾을 수 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": unknown;
                 };
             };
         };
