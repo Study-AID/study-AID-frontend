@@ -45,8 +45,8 @@ export function createContextWithHook<ContextType>(
 }
 
 export const [AuthStateContextProvider, useAuthState] = createContextWithHook<{
-  isLoggedIn: boolean | null;
-  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean | null>>;
+  isLoggedIn: boolean;
+  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
 }>({
   name: 'AuthStateContext',
   errorMessage:
@@ -54,7 +54,7 @@ export const [AuthStateContextProvider, useAuthState] = createContextWithHook<{
 });
 
 export const AuthClientProvider = ({ children }: PropsWithChildren) => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   return (
     <AuthStateContextProvider value={{ isLoggedIn, setIsLoggedIn }}>
@@ -66,7 +66,9 @@ export const AuthClientProvider = ({ children }: PropsWithChildren) => {
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const router = useRouter();
   const { isLoggedIn, setIsLoggedIn } = useAuthState();
-  const { data: me, isLoading } = api.useQuery('get', '/v1/auth/me', {});
+  const { data: me, isLoading } = api.useQuery('get', '/v1/auth/me', {
+    enabled: isLoggedIn,
+  });
 
   useEffect(() => {
     if (isLoading) return;

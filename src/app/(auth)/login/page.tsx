@@ -6,13 +6,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { LoginFormValues, loginSchema } from './schema';
 
 export default function Login() {
   const router = useRouter();
-  const { setIsLoggedIn } = useAuthState();
+  const { isLoggedIn, setIsLoggedIn } = useAuthState();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      router.push('/');
+    }
+  }, [isLoggedIn, router]);
 
   const {
     register,

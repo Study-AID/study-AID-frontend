@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
   watchOptions: {
     pollIntervalMs: 1000,
   },
+  webpack: (config) => {
+    config.resolve.alias.canvas = false;
+
+    return config;
+  },
 };
 
 export default nextConfig;
