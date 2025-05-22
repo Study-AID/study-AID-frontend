@@ -18,10 +18,10 @@ export default async function DashboardLayout({
         {modal}
         <div className="flex h-screen w-full">
           <Sidebar />
-          <div className="flex flex-1 flex-col">
+          <div className="flex h-full max-h-[100dvh] flex-1 flex-col">
             <Header />
 
-            <div className="flex flex-wrap gap-4 p-6">{children}</div>
+            <div className="flex-1 px-4">{children}</div>
           </div>
         </div>
       </LectureUploadProvider>

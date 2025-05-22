@@ -3,7 +3,6 @@
 FROM node:22-alpine AS base
 
 FROM base AS deps
-ENV SKIP_ENV_VALIDATION=1
 
 RUN apk add --no-cache libc6-compat
 WORKDIR /app

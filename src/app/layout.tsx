@@ -34,7 +34,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} relative font-[Noto_Sans_KR] antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} relative max-h-[100dvh] max-w-[100dvw] font-[Noto_Sans_KR] antialiased`}
       >
         <ReactQueryProvider>
           <AuthClientProvider>{children}</AuthClientProvider>
