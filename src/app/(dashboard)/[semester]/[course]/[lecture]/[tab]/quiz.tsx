@@ -6,6 +6,7 @@ import { components } from '@/types/openapi.schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useCallback, useState } from 'react';
 import { Resolver, useForm } from 'react-hook-form';
 import { QuizCreateFormValues, quizCreateSchema } from './quizSchema';
 
@@ -50,7 +51,7 @@ export function QuizComponent({
           quiz={quiz}
           onClick={() => {
             router.push(
-              `/${semesterId}/${courseId}/${lectureId}/quiz?id=${quiz.id}`,
+              `/${semesterId}/${courseId}/${lectureId}/quiz?id=${quiz.id}&p=1`,
             );
           }}
         />
@@ -243,12 +244,189 @@ export function QuizCreateComponent({ lectureId }: { lectureId: string }) {
   );
 }
 
-export function QuizSolveComponent({ quizId }: { quizId: string }) {
+export function QuizSolveComponent({
+  quizId,
+  problem,
+}: {
+  quizId: string;
+  problem: number;
+}) {
   const router = useRouter();
+  const [answers, setAnswers] = useState<
+    Record<number, components['schemas']['SubmitQuizItem']>
+  >({});
+
+  const { data, isLoading, error } = api.useQuery('get', '/v1/quizzes/{id}', {
+    params: {
+      path: { id: quizId },
+    },
+  });
+
+  // Submit all answers
+  const mutation = api.useMutation('post', '/v1/quizzes/{id}/submit');
+  const handleSubmit = () => {
+    mutation.mutate({
+      params: {
+        path: {
+          id: quizId,
+        },
+      },
+      body: {
+        submitQuizItems: Object.entries(answers).map(([key, value]) => value),
+      },
+    });
+  };
+
+  if (isLoading || !data || !data.quizItems) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <span className="text-lg font-semibold text-gray-700">Loading...</span>
+      </div>
+    );
+  }
+
+  const question = data.quizItems[problem - 1];
+
+  const handleAnswer = useCallback(
+    (value: string | number) => {
+      if (!question) return;
+      const base: components['schemas']['SubmitQuizItem'] = {
+        quizItemId: question.id,
+        questionType: question.questionType,
+      };
+      const item: components['schemas']['SubmitQuizItem'] = { ...base };
+
+      switch (question.questionType) {
+        case 'true_or_false':
+          item.selectedBool = value === 'O';
+          break;
+        case 'multiple_choice':
+          const idx = question.choices!.indexOf(value as string);
+          item.selectedIndices = [idx];
+          break;
+        case 'short_answer':
+        case 'essay':
+          item.textAnswer = value as string;
+          break;
+        default:
+          break;
+      }
+
+      setAnswers((prev) => ({ ...prev, [problem]: item }));
+    },
+    [problem, question],
+  );
+
+  const go = (n: number) => {
+    const next = problem + n;
+    if (next < 1 || next > data.quizItems!.length) return;
+    router.replace(`?p=${next}`);
+  };
 
   return (
-    <div className="flex h-full items-center justify-center">
-      <span className="text-lg font-semibold text-gray-700">퀴즈 풀이하기</span>
+    <div className="flex h-full flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between bg-gray-200 px-4 py-2">
+        <h2 className="font-semibold">{data.title}</h2>
+        <span>
+          문제: {problem}/{data.quizItems.length}
+        </span>
+      </div>
+
+      {/* Question & Options */}
+      <div className="flex flex-1 flex-col items-center justify-center px-6">
+        <div className="mb-6 text-center text-gray-700">
+          {problem}. {question.question}
+        </div>
+
+        {/* OX */}
+        {question.questionType === 'true_or_false' && (
+          <div className="flex space-x-8">
+            {['O', 'X'].map((opt) => (
+              <button
+                key={opt}
+                onClick={() => handleAnswer(opt)}
+                className={`h-24 w-24 rounded border-2 text-4xl font-bold ${
+                  answers[problem]?.selectedBool === (opt === 'O')
+                    ? 'border-blue-500 bg-blue-300 text-white'
+                    : 'border-blue-500 text-blue-500'
+                }`}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* 선택형 */}
+        {question.questionType === 'multiple_choice' && (
+          <div className="grid grid-cols-2 gap-6">
+            {question.choices!.map((opt, idx) => (
+              <button
+                key={opt}
+                onClick={() => handleAnswer(opt)}
+                className={`rounded border-2 p-4 text-lg font-medium ${
+                  answers[problem]?.selectedIndices?.[0] === idx
+                    ? 'border-blue-500 bg-blue-300 text-white'
+                    : 'border-gray-300 text-gray-700'
+                }`}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* 단답/서술 */}
+        {(question.questionType === 'short_answer' ||
+          question.questionType === 'essay') && (
+          <div className="w-full max-w-lg">
+            {question.questionType === 'short_answer' ? (
+              <input
+                type="text"
+                value={answers[problem]?.textAnswer ?? ''}
+                onChange={(e) => handleAnswer(e.target.value)}
+                className="w-full rounded border border-gray-300 p-2"
+                placeholder="답을 입력해주세요"
+              />
+            ) : (
+              <textarea
+                rows={4}
+                value={answers[problem]?.textAnswer ?? ''}
+                onChange={(e) => handleAnswer(e.target.value)}
+                className="w-full rounded border border-gray-300 p-2"
+                placeholder="답을 입력해주세요"
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <div className="flex justify-center space-x-6 p-4">
+        <button
+          onClick={() => go(-1)}
+          disabled={problem === 1}
+          className="rounded bg-blue-200 px-6 py-2 text-blue-700 disabled:opacity-50"
+        >
+          이전
+        </button>
+        {problem < data.quizItems.length ? (
+          <button
+            onClick={() => go(1)}
+            className="rounded bg-blue-500 px-6 py-2 text-white"
+          >
+            다음
+          </button>
+        ) : (
+          <button
+            onClick={handleSubmit}
+            className="rounded bg-green-600 px-6 py-2 text-white"
+          >
+            제출하기
+          </button>
+        )}
+      </div>
     </div>
   );
 }

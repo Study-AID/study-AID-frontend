@@ -8,7 +8,24 @@ import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import { useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { MessageSquare } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+
+type PageRange = { start_page: number; end_page: number };
+
+type Topic = {
+  title: string;
+  page_range: PageRange;
+  description: string;
+  additional_details?: string[];
+  sub_topics?: Topic[];
+};
+
+interface LectureSummaryProps {
+  summary: {
+    topics: Topic[];
+    overview: string;
+  };
+}
 
 export default function NoteComponent({
   lecture,
@@ -23,6 +40,28 @@ export default function NoteComponent({
       utils.invalidateQueries({ queryKey: ['/v1/lectures/{id}'] });
     }
   });
+
+  const parsed = useMemo<ParsedText>(() => {
+    let data: any;
+
+    if (typeof lecture.summary === 'string') {
+      try {
+        // 문자열일 경우 JSON.parse
+        data = JSON.parse(lecture.summary);
+      } catch (e) {
+        console.error('Summary JSON 파싱 실패:', e);
+        data = { pages: [], total_pages: 0 };
+      }
+    } else {
+      // 이미 객체라면 그대로 사용
+      data = lecture.summary;
+    }
+
+    return {
+      pages: Array.isArray(data.pages) ? data.pages : [],
+      total_pages: typeof data.total_pages === 'number' ? data.total_pages : 0,
+    };
+  }, [lecture.summary]);
 
   return (
     <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
@@ -104,10 +143,84 @@ export default function NoteComponent({
           </div>
         ) : (
           <div className="flex h-full w-1/2 items-center justify-center">
-            <div dangerouslySetInnerHTML={{ __html: lecture.summary! }} />
+            <LectureSummaryView summary={lecture.summary!} />
           </div>
         )}
       </div>
     </Worker>
+  );
+}
+
+export function LectureSummaryView({ summary }: LectureSummaryProps) {
+  return (
+    <div className="mx-auto w-full max-w-4xl space-y-12 px-4 py-8">
+      <section>
+        <h2 className="mb-2 text-2xl font-bold">📘 강의 개요</h2>
+        <p className="whitespace-pre-wrap text-gray-700">{summary.overview}</p>
+      </section>
+
+      <section>
+        <h2 className="mb-4 text-2xl font-bold">📚 주요 주제</h2>
+        <ul className="space-y-8">
+          {summary.topics.map((topic, idx) => (
+            <TopicBlock key={idx} topic={topic} level={0} />
+          ))}
+        </ul>
+      </section>
+
+      <section>
+        <h2 className="mb-4 text-2xl font-bold">🔑 핵심 키워드</h2>
+        <ul className="space-y-2">
+          {summary.keywords.map((kw, idx) => (
+            <li key={idx} className="rounded border bg-gray-50 p-4">
+              <h3 className="font-semibold">{kw.keyword}</h3>
+              <p className="text-sm text-gray-600">
+                📄 p.{kw.page_range.start_page}~{kw.page_range.end_page} |
+                관련도: {kw.relevance}
+              </p>
+              <p className="mt-1">{kw.description}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-2xl font-bold">📖 참고 자료</h2>
+        <ul className="list-inside list-disc">
+          {summary.additional_references.map((ref, i) => (
+            <li key={i}>{ref}</li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+}
+
+function TopicBlock({ topic, level }: { topic: Topic; level: number }) {
+  return (
+    <li className="border-l-4 border-blue-400 pl-4">
+      <h3
+        className={`mb-1 text-xl font-semibold ${level > 0 ? 'text-blue-600' : ''}`}
+      >
+        {topic.title}
+      </h3>
+      <p className="mb-1 text-sm text-gray-600">
+        📄 p.{topic.page_range.start_page}~{topic.page_range.end_page}
+      </p>
+      <p className="mb-2 whitespace-pre-wrap">{topic.description}</p>
+      {topic.additional_details?.map((detail, idx) => (
+        <p key={idx} className="mb-1 text-sm text-gray-700">
+          • {detail}
+        </p>
+      ))}
+
+      {topic.sub_topics?.length > 0 && (
+        <ul className="mt-4 ml-4 space-y-4">
+          {topic.sub_topics.map((sub, i) => (
+            <TopicBlock key={i} topic={sub} level={level + 1} />
+          ))}
+        </ul>
+      )}
+    </li>
   );
 }
