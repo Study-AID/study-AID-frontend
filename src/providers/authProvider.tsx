@@ -68,6 +68,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const { isLoggedIn, setIsLoggedIn } = useAuthState();
   const { data: me, isLoading } = api.useQuery('get', '/v1/auth/me', {
     enabled: isLoggedIn,
+    retry: false,
   });
 
   useEffect(() => {
@@ -77,7 +78,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     if (!loggedIn) router.replace('/login');
   }, [isLoading, me, router, setIsLoggedIn]);
 
-  if (isLoading || isLoggedIn === null) {
+  if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div className="h-32 w-32 animate-spin rounded-full border-t-2 border-b-2 border-gray-900" />
