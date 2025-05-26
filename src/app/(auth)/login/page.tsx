@@ -38,6 +38,7 @@ export default function Login() {
       console.log(response);
       sessionStorage.setItem('access_token', accessToken);
       setIsLoggedIn(true);
+      router.push('/');
     },
     onError: (error) => {
       console.error('Login error:', error);
@@ -48,7 +49,6 @@ export default function Login() {
     loginMutation.mutate({
       body: data,
     });
-    router.push('/');
   };
 
   const onGoogleLogin = () => {
