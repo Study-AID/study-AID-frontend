@@ -963,6 +963,19 @@ export interface components {
             /** @description Updated lecture title */
             title: string;
         };
+        /** @description Keyword information with relevance */
+        Keyword: {
+            /** @description Keyword text */
+            keyword?: string;
+            /** @description Description of the keyword */
+            description?: string;
+            /**
+             * Format: float
+             * @description Relevance score (0.0 to 1.0)
+             */
+            relevance?: number;
+            pageRange?: components["schemas"]["PageRange"];
+        };
         /** @description Lecture response DTO */
         LectureResponse: {
             /**
@@ -991,10 +1004,7 @@ export interface components {
             note?: {
                 [key: string]: Record<string, never>;
             };
-            /** @description Summary of the lecture */
-            summary?: {
-                [key: string]: Record<string, never>;
-            };
+            summary?: components["schemas"]["Summary"];
             /**
              * @description Summary status of the lecture
              * @enum {string}
@@ -1010,6 +1020,50 @@ export interface components {
              * @description Last update timestamp of the lecture
              */
             updatedAt: string;
+        };
+        /** @description Metadata for lecture summary */
+        Metadata: {
+            /** @description Model used for generating summary */
+            model?: string;
+            /** @description Creation timestamp */
+            createdAt?: string;
+        };
+        /** @description Page range information */
+        PageRange: {
+            /**
+             * Format: int32
+             * @description Starting page number
+             */
+            startPage?: number;
+            /**
+             * Format: int32
+             * @description Ending page number
+             */
+            endPage?: number;
+        };
+        /** @description Complete lecture summary */
+        Summary: {
+            metadata?: components["schemas"]["Metadata"];
+            /** @description Overall overview of the lecture */
+            overview?: string;
+            /** @description Key keywords extracted from the lecture */
+            keywords?: components["schemas"]["Keyword"][];
+            /** @description Main topics covered in the lecture */
+            topics?: components["schemas"]["TopicDetails"][];
+            /** @description Additional references mentioned in the lecture */
+            additionalReferences?: string[];
+        };
+        /** @description Topic details with hierarchical structure */
+        TopicDetails: {
+            /** @description Title of the topic */
+            title?: string;
+            /** @description Description of the topic */
+            description?: string;
+            pageRange?: components["schemas"]["PageRange"];
+            /** @description Additional details about the topic */
+            additionalDetails?: string[];
+            /** @description Sub-topics under this topic */
+            subTopics?: components["schemas"]["TopicDetails"][];
         };
         /** @description Lecture update request */
         UpdateLectureDisplayOrderLexRequest: {
