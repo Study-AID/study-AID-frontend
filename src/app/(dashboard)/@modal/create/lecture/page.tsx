@@ -9,6 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChangeEvent, useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { pdfjs } from 'react-pdf';
 import ModalWrapper from '../../_components/ModalWrapper';
 import { lectureSchema, LectureSchema } from './schema';
 
@@ -45,7 +46,7 @@ function LectureCreateModalContent({ courseId }: { courseId: string }) {
   });
 
   useEffect(() => {
-    console.log('file changed:', file);
+    setValue('file', file as any);
   }, [file, courseId, reset]);
 
   const createLecture = api.useMutation('post', '/v1/lectures', {

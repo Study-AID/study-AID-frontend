@@ -34,9 +34,9 @@ export default function Login() {
 
   const loginMutation = api.useMutation('post', '/v1/auth/login/email', {
     onSuccess: (response: any) => {
-      const { accessToken } = response.data.token;
-      console.log(response);
+      const { accessToken, refreshToken } = response.data.token;
       sessionStorage.setItem('access_token', accessToken);
+      sessionStorage.setItem('refresh_token', refreshToken);
       setIsLoggedIn(true);
       router.push('/');
     },

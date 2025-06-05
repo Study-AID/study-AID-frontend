@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import Link from 'next/link';
+import { pdfjs } from 'react-pdf';
 
 const tabs = [
   {
@@ -31,8 +32,8 @@ export default async function LectureLayout({
   const { semester, course, lecture, tab } = await params;
 
   return (
-    <div className="flex flex-col">
-      <div className="flex h-full flex-col overflow-hidden">
+    <div className="flex h-full flex-col gap-y-2">
+      <div className="flex h-12 flex-col overflow-hidden">
         <div>
           {tabs.map((tabItem) => (
             <Link
@@ -55,7 +56,7 @@ export default async function LectureLayout({
           ))}
         </div>
       </div>
-      <div className="flex-1">{children}</div>
+      <div className="max-h-[calc(100dvh-8rem)] pb-4">{children}</div>
     </div>
   );
 }

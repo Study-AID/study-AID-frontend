@@ -9,6 +9,7 @@ import { QuizComponent, QuizCreateComponent, QuizSolveComponent } from './quiz';
 
 export default function LecturePage() {
   const params = useParams();
+
   const semesterId = params.semester as string;
   const courseId = params.course as string;
   const lectureId = params.lecture as string;
@@ -17,7 +18,7 @@ export default function LecturePage() {
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
   const create = searchParams.get('create');
-  const p = searchParams.get('p');
+  const p = searchParams.get('p') || '1';
 
   const { data, isLoading, error } = api.useQuery('get', '/v1/lectures/{id}', {
     params: {
