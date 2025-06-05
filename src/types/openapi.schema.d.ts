@@ -288,7 +288,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/qna/chats": {
+    "/v1/lectures": {
         parameters: {
             query?: never;
             header?: never;
@@ -296,6 +296,27 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
+        put?: never;
+        /** @description Creates a new lecture */
+        post: operations["createLecture"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lectures/{lectureId}/qna-chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 특정 강의의 QnA 채팅방 UUID 조회
+         * @description 특정 강의의 QnA 채팅방 UUID를 조회합니다.
+         */
+        get: operations["getQnaChatId"];
         put?: never;
         /**
          * QnA 채팅방 생성
@@ -308,7 +329,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/qna/chats/{chatId}/ask": {
+    "/v1/lectures/{lectureId}/qna-chat/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 특정 QnA 채팅방 모든 메시지 조회
+         * @description 특정 QnA 채팅방의 모든 메시지를 조회합니다.
+         */
+        get: operations["getMessages"];
+        put?: never;
+        /**
+         * 특정 QnA 채팅방에 메세지 전송
+         * @description QnA 채팅방에 질문을 하고 강의 자료를 기반으로 답변을 받습니다.
+         */
+        post: operations["sendMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lectures/{lectureId}/qna-chat/messages/{messageId}/toggle-like": {
         parameters: {
             query?: never;
             header?: never;
@@ -318,27 +363,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 질문하기
-         * @description QnA 채팅방에 질문을 하고 강의 자료를 기반으로 답변을 받습니다.
+         * 채팅 메시지 좋아요 토글
+         * @description AI 응답 메시지의 좋아요를 토글합니다. 좋아요가 있으면 제거하고, 없으면 추가합니다.
          */
-        post: operations["askQuestion"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/lectures": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Creates a new lecture */
-        post: operations["createLecture"];
+        post: operations["toggleLikeMessage"];
         delete?: never;
         options?: never;
         head?: never;
@@ -521,7 +549,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/qna/chats/{chatId}": {
+    "/v1/lectures/{lectureId}/qna-chat/messages/liked": {
         parameters: {
             query?: never;
             header?: never;
@@ -529,10 +557,30 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 특정 QnA 채팅방 조회 (모든 메시지 조회)
-         * @description 특정 QnA 채팅방의 모든 메시지를 조회합니다.
+         * QnA 채팅방 좋아요한 메시지 조회
+         * @description 특정 강의의 QnA 채팅방에서 좋아요한 메시지들만 조회합니다.
          */
-        get: operations["readQnaChat"];
+        get: operations["getLikedMessages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lectures/{id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a lecture preview by ID
+         * @description Retrieves a lecture preview with keywords by its ID
+         */
+        get: operations["getLecturePreviewById"];
         put?: never;
         post?: never;
         delete?: never;
@@ -824,7 +872,7 @@ export interface components {
             user?: components["schemas"]["User"];
             title?: string;
             /** @enum {string} */
-            status?: "generate_in_progress" | "not_started" | "submitted" | "graded";
+            status?: "generate_in_progress" | "not_started" | "submitted" | "partially_graded" | "graded";
             /** Format: date-time */
             contentsGenerateAt?: string;
             /** Format: date-time */
@@ -852,6 +900,7 @@ export interface components {
             displayOrder?: number;
             /** Format: float */
             points?: number;
+            isLiked?: boolean;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
@@ -882,7 +931,7 @@ export interface components {
              * @description Quiz status
              * @enum {string}
              */
-            status?: "generate_in_progress" | "not_started" | "submitted" | "graded";
+            status?: "generate_in_progress" | "not_started" | "submitted" | "partially_graded" | "graded";
             /**
              * Format: date-time
              * @description Contents generation time
@@ -1082,7 +1131,7 @@ export interface components {
             user?: components["schemas"]["User"];
             title?: string;
             /** @enum {string} */
-            status?: "generate_in_progress" | "not_started" | "submitted" | "graded";
+            status?: "generate_in_progress" | "not_started" | "submitted" | "partially_graded" | "graded";
             referencedLectures?: string[];
             /** Format: date-time */
             contentsGenerateAt?: string;
@@ -1110,6 +1159,7 @@ export interface components {
             displayOrder?: number;
             /** Format: float */
             points?: number;
+            isLiked?: boolean;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
@@ -1140,7 +1190,7 @@ export interface components {
              * @description Exam status
              * @enum {string}
              */
-            status?: "generate_in_progress" | "not_started" | "submitted" | "graded";
+            status?: "generate_in_progress" | "not_started" | "submitted" | "partially_graded" | "graded";
             /** @description Referenced lectures */
             referencedLectures?: string[];
             /**
@@ -1329,28 +1379,6 @@ export interface components {
              */
             updatedAt?: string;
         };
-        CreateQnaChatResponse: {
-            /** Format: uuid */
-            chatId: string;
-        };
-        CreateQnaChatRequest: {
-            /** Format: uuid */
-            lectureId?: string;
-        };
-        QnaChatMessageResponse: {
-            role: string;
-            content: string;
-            references: components["schemas"]["ReferenceChunkResponse"][];
-            recommendedQuestions: string[];
-        };
-        ReferenceChunkResponse: {
-            text?: string;
-            /** Format: int32 */
-            page?: number;
-        };
-        QnaChatMessageRequest: {
-            question?: string;
-        };
         /** @description Lecture creation request */
         CreateLectureRequest: {
             /**
@@ -1362,6 +1390,35 @@ export interface components {
             title: string;
             /** Format: binary */
             file: string;
+        };
+        CreateQnaChatResponse: {
+            /** Format: uuid */
+            chatId: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        QnaChatMessageResponse: {
+            /** Format: uuid */
+            messageId: string;
+            role: string;
+            content: string;
+            references: components["schemas"]["ReferenceChunkResponse"][];
+            recommendedQuestions: string[];
+            /** Format: date-time */
+            createdAt: string;
+            isLiked: boolean;
+        };
+        ReferenceChunkResponse: {
+            text?: string;
+            /** Format: int32 */
+            page?: number;
+        };
+        QnaChatMessageRequest: {
+            question?: string;
+        };
+        ToggleLikeMessageResponse: {
+            action: string;
+            isLiked: boolean;
         };
         CreateExamInput: {
             /** Format: uuid */
@@ -1388,7 +1445,7 @@ export interface components {
             userId?: string;
             title?: string;
             /** @enum {string} */
-            status?: "generate_in_progress" | "not_started" | "submitted" | "graded";
+            status?: "generate_in_progress" | "not_started" | "submitted" | "partially_graded" | "graded";
             referencedLectures?: string[];
             /** Format: date-time */
             contentsGenerateAt?: string;
@@ -1484,14 +1541,38 @@ export interface components {
             /** @description List of quizzes response */
             quizzes?: components["schemas"]["QuizResponse"][];
         };
-        MessageItem: {
-            role: string;
-            content: string;
+        GetQnaChatIdResponse: {
+            /** Format: uuid */
+            chatId: string;
         };
-        ReadQnaChatResponse: {
+        GetQnaChatMessagesResponse: {
             /** Format: uuid */
             chatId: string;
             messages: components["schemas"]["MessageItem"][];
+            hasMore: boolean;
+            /** Format: uuid */
+            nextCursor?: string;
+        };
+        MessageItem: {
+            /** Format: uuid */
+            messageId: string;
+            role: string;
+            content: string;
+            /** Format: date-time */
+            createdAt: string;
+            isLiked: boolean;
+        };
+        /** @description Lecture preview response DTO with keywords */
+        LecturePreviewResponse: {
+            /**
+             * Format: uuid
+             * @description Unique ID of the lecture
+             */
+            id: string;
+            /** @description Title of the lecture */
+            title: string;
+            /** @description Keywords extracted from the lecture */
+            keywords?: components["schemas"]["Keyword"][];
         };
         /** @description List of lectures response */
         LectureListResponse: {
@@ -2714,18 +2795,89 @@ export interface operations {
             };
         };
     };
-    createChat: {
+    createLecture: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                "application/json": components["schemas"]["CreateQnaChatRequest"];
+                "multipart/form-data": components["schemas"]["CreateLectureRequest"];
             };
         };
+        responses: {
+            /** @description Successfully created lecture */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description Invalid input data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+        };
+    };
+    getQnaChatId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lectureId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 채팅방 UUID 조회 성공 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["GetQnaChatIdResponse"];
+                };
+            };
+            /** @description 채팅방을 찾을 수 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["GetQnaChatIdResponse"];
+                };
+            };
+        };
+    };
+    createChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lectureId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description 채팅방 생성 성공 */
             200: {
@@ -2756,12 +2908,55 @@ export interface operations {
             };
         };
     };
-    askQuestion: {
+    getMessages: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                lectureId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 채팅 메시지 조회 성공 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["GetQnaChatMessagesResponse"];
+                };
+            };
+            /** @description 접근 권한 없음 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": unknown;
+                };
+            };
+            /** @description 채팅방을 찾을 수 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": unknown;
+                };
+            };
+        };
+    };
+    sendMessage: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                chatId: string;
+                lectureId: string;
             };
             cookie?: never;
         };
@@ -2809,44 +3004,43 @@ export interface operations {
             };
         };
     };
-    createLecture: {
+    toggleLikeMessage: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                lectureId: string;
+                messageId: string;
+            };
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "multipart/form-data": components["schemas"]["CreateLectureRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Successfully created lecture */
-            201: {
+            /** @description 좋아요 토글 성공 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["LectureResponse"];
+                    "*/*": components["schemas"]["ToggleLikeMessageResponse"];
                 };
             };
-            /** @description Invalid input data */
+            /** @description 잘못된 요청 (사용자 메시지는 좋아요할 수 없음) */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["LectureResponse"];
+                    "*/*": unknown;
                 };
             };
-            /** @description Internal server error */
-            500: {
+            /** @description 메시지 또는 채팅방을 찾을 수 없음 */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["LectureResponse"];
+                    "*/*": unknown;
                 };
             };
         };
@@ -3239,42 +3433,74 @@ export interface operations {
             };
         };
     };
-    readQnaChat: {
+    getLikedMessages: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                chatId: string;
+                lectureId: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description 채팅 메시지 조회 성공 */
+            /** @description 좋아요한 메시지 조회 성공 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ReadQnaChatResponse"];
+                    "*/*": components["schemas"]["GetQnaChatMessagesResponse"];
                 };
             };
-            /** @description 접근 권한 없음 */
-            401: {
+        };
+    };
+    getLecturePreviewById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the lecture to retrieve preview for */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved lecture preview */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": unknown;
+                    "*/*": components["schemas"]["LecturePreviewResponse"];
                 };
             };
-            /** @description 채팅방을 찾을 수 없음 */
+            /** @description User does not have access to this lecture */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LecturePreviewResponse"];
+                };
+            };
+            /** @description Lecture not found */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": unknown;
+                    "*/*": components["schemas"]["LecturePreviewResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LecturePreviewResponse"];
                 };
             };
         };

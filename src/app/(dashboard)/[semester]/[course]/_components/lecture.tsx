@@ -1,6 +1,7 @@
 'use client';
 
 import { api } from '@/api/client';
+import { Card, CardContent } from '@/component/ui/card';
 import { useLectureUpload } from '@/providers/uploadProvider';
 import { components } from '@/types/openapi.schema';
 import { format } from 'date-fns';
@@ -13,6 +14,7 @@ import {
   MessageCircle,
   Plus,
   Search,
+  Upload,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
@@ -97,12 +99,26 @@ function LectureAccordion({
 
 function NewLectureAccordion({ onClick }: { onClick: () => void }) {
   return (
-    <div
+    <Card
+      className="cursor-pointer border-2 border-dashed border-[#d1d5db] bg-[#f8f9fa]"
       onClick={onClick}
-      className="flex h-16 cursor-pointer items-center justify-center rounded-lg border-2 border-[#D7D7D7] bg-black opacity-65 transition hover:opacity-85"
     >
-      <CirclePlus className="size-8 cursor-pointer text-[#F3F3F3]" />
-    </div>
+      <CardContent className="p-8 text-center">
+        <Upload className="mx-auto mb-2 h-8 w-8 text-[#757575]" />
+        <p className="mb-2 text-[#757575]">
+          업로드할 강의 자료 파일을 선택하거나 드래그 앤 드롭을 하세요.
+        </p>
+        <p className="text-sm text-[#999999]">
+          지원되는 파일 형식: PDF, PPTX, TXT, Markdown, MP3
+        </p>
+      </CardContent>
+    </Card>
+    // <div
+    //   onClick={onClick}
+    //   className="flex h-16 cursor-pointer items-center justify-center rounded-lg border-2 border-[#D7D7D7] bg-black opacity-65 transition hover:opacity-85"
+    // >
+    //   <CirclePlus className="size-8 cursor-pointer text-[#F3F3F3]" />
+    // </div>
   );
 }
 
@@ -203,7 +219,7 @@ export function LectureList({
   return (
     <div ref={drop}>
       <section className="rounded-lg bg-[#F7F7F7] shadow">
-        <header className="flex items-center justify-between px-6 py-4">
+        <header className="flex items-center justify-between px-6 py-2">
           <h2 className="font-medium">강의 목록</h2>
 
           <div className="flex items-center gap-x-3">
@@ -224,7 +240,7 @@ export function LectureList({
         </header>
         {/* 강의 자료 검색 */}
 
-        <div className="scroll-th relative max-h-[50dvh] overflow-y-scroll rounded-b-lg p-3 text-center text-gray-500">
+        <div className="scroll-th relative max-h-[50dvh] overflow-y-scroll rounded-b-lg px-3 pb-4 text-center text-gray-500">
           <LectureListInner
             lectures={lectures}
             semesterId={semesterId}
@@ -265,7 +281,7 @@ function LectureListInner({
           subtitle={format(lecture.updatedAt, '마지막 학습 시간: yyyy.MM.dd')}
           moveLecture={moveLecture}
           onDragEnd={onDragEnd}
-          link={`/${semesterId}/${lecture.courseId}/${lecture.id}`}
+          link={`/${semesterId}/${lecture.courseId}/${lecture.id}?tab=note`}
         />
       ))}
     </div>

@@ -67,11 +67,11 @@ const Header: React.FC = () => {
   const isDashboard = !semesterId;
 
   return (
-    <div className="mb-4 border-b border-[#C4C4C4] bg-[#EFEFEF] px-6 py-4 font-medium">
+    <div className="border-b border-[#e6e6e6] bg-white px-8 py-4">
       {isDashboard ? (
-        <div className="mb-2 text-2xl">대시보드</div>
+        <h1 className="text-xl font-bold text-[#1d1b20]">대시보드</h1>
       ) : (
-        <div className="mb-2 flex items-center gap-x-2 text-2xl">
+        <div className="space-x-2 text-xl font-bold text-[#1d1b20] *:inline-block">
           {/* 학기 */}
           {semesterId && <SemesterLabel semesterId={semesterId as string} />}
 

@@ -6,18 +6,28 @@ import {
   BookOpen,
   Calendar,
   ChevronDown,
+  ChevronUp,
   Edit2,
+  Menu,
   Menu as MenuIcon,
+  PanelLeftClose,
+  PanelRightOpen,
   Plus,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { SearchInput } from './searchInput';
+import { Button } from './ui/button';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from './ui/collapsible';
 import { UserPlaceholder } from './UserPlaceholder';
 
 export default function Sidebar() {
-  const router = useRouter();
   const { semester: semId, course: crsId, lecture: lecId } = useParams();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // depth: 0 = home, 1 = semester, 2 = course, 3 = lecture
   const depth = useMemo(() => {
@@ -28,27 +38,48 @@ export default function Sidebar() {
   }, [semId, crsId, lecId]);
 
   return (
-    <aside className="flex h-full w-60 flex-col border-r bg-white">
-      <div className="flex items-center justify-between p-4">
-        <span className="text-lg font-bold">Study AID</span>
-        <button className="rounded p-1 hover:bg-gray-100">
-          <MenuIcon size={20} />
-        </button>
-      </div>
-      <div className="mb-4 px-4">
-        <UserPlaceholder />
-      </div>
-      <div className="mb-4 px-4">
-        <SearchInput placeholder="검색..." />
+    <div
+      className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} relative flex h-full min-h-screen flex-col overflow-visible border-r border-[#e6e6e6] bg-white transition-all duration-300 ease-in-out`}
+    >
+      <div className="flex items-center justify-between border-b border-[#e6e6e6] px-3 py-2.5 text-xl">
+        {!isSidebarCollapsed && (
+          <h1 className="font-semibold text-[#1d1b20]">Study AID</h1>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className="ml-auto text-[#757575] hover:bg-[#f5f5f5]"
+        >
+          {isSidebarCollapsed ? (
+            <PanelRightOpen className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
+        </Button>
       </div>
 
-      <SemesterList
-        depth={depth}
-        activeSem={semId || null}
-        activeCourse={crsId || null}
-        activeLecture={lecId || null}
-      />
-    </aside>
+      {!isSidebarCollapsed && (
+        <div className="border-b border-[#e6e6e6] px-4 py-2">
+          <UserPlaceholder />
+        </div>
+      )}
+
+      {!isSidebarCollapsed && (
+        <div className="p-4">
+          <SearchInput placeholder="검색..." />
+        </div>
+      )}
+
+      {!isSidebarCollapsed && (
+        <SemesterList
+          depth={depth}
+          activeSem={(semId as string) || null}
+          activeCourse={(crsId as string) || null}
+          activeLecture={(lecId as string) || null}
+        />
+      )}
+    </div>
   );
 }
 
@@ -75,44 +106,52 @@ function SemesterList({
       : semesters;
 
   return (
-    <div className="flex-1 overflow-y-auto px-4">
-      {list.map((sem) => {
-        const isActiveSem = sem.id === activeSem;
-        return (
-          <div key={sem.id} className="mb-2">
-            <div
-              className={`flex cursor-pointer items-center justify-between rounded-md px-3 py-2 ${isActiveSem ? 'bg-[#5971E7] text-white opacity-[73]' : 'bg-white hover:bg-gray-100'} `}
-              onClick={() => router.push(isActiveSem ? '/' : `/${sem.id}`)}
+    <div className="px-4">
+      <div className="space-y-2">
+        {list.map((sem) => {
+          const isActiveSem = sem.id === activeSem;
+          return (
+            <Collapsible
+              open={isActiveSem}
+              onOpenChange={() => router.push(isActiveSem ? '/' : `/${sem.id}`)}
+              key={sem.id}
             >
-              <div className="flex items-center gap-2">
-                <Calendar size={18} />
-                <span className="truncate font-medium">{sem.name}</span>
-              </div>
-              <ChevronDown
-                size={20}
-                className={`transition-transform ${isActiveSem ? 'rotate-180' : ''}`}
-              />
-            </div>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 rounded-lg border border-[#e6e6e6] p-3 font-medium text-[#1d1b20] shadow-sm transition-all duration-200 hover:border-[#d1d5db] hover:bg-[#f8f9fa] hover:shadow-md"
+                >
+                  <Calendar className="h-4 w-4 text-[#5971e7]" />
+                  <span>{sem.name}</span>
+                  {isActiveSem ? (
+                    <ChevronUp className="ml-auto h-4 w-4 text-[#757575] transition-transform duration-200" />
+                  ) : (
+                    <ChevronDown className="ml-auto h-4 w-4 text-[#757575] transition-transform duration-200" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="ml-6 space-y-1 overflow-hidden transition-all duration-500 ease-in-out">
+                <CourseList
+                  semesterId={sem.id}
+                  activeCourse={activeCourse}
+                  activeLecture={activeLecture}
+                  depth={depth}
+                />
+              </CollapsibleContent>
+            </Collapsible>
+          );
+        })}
+      </div>
 
-            {isActiveSem && (
-              <CourseList
-                semesterId={sem.id}
-                activeCourse={activeCourse}
-                activeLecture={activeLecture}
-                depth={depth}
-              />
-            )}
-          </div>
-        );
-      })}
-
-      <button
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#5971E7] py-2 text-white opacity-[73] hover:opacity-90"
-        onClick={() => router.push('/create/semester')}
-      >
-        <Plus size={18} />
-        <span>학기 추가</span>
-      </button>
+      {depth < 2 && (
+        <button
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#5971E7] py-2 text-white opacity-[73] hover:opacity-90"
+          onClick={() => router.push('/create/semester')}
+        >
+          <Plus size={18} />
+          <span>학기 추가</span>
+        </button>
+      )}
     </div>
   );
 }
@@ -136,47 +175,68 @@ function CourseList({
   });
   const courses = data?.courses || [];
 
+  if (depth < 2) {
+    return (
+      <div className="mt-2 space-y-1 pl-2">
+        {courses.map((course) => {
+          return (
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 rounded-lg border border-[#e6e6e6] p-3 font-medium text-[#1d1b20] shadow-sm transition-all duration-200 hover:border-[#d1d5db] hover:bg-[#f8f9fa] hover:shadow-md"
+              key={course.id}
+              onClick={() => router.push(`/${semesterId}/${course.id}`)}
+            >
+              <BookOpen className="h-4 w-4 text-[#5971e7]" />
+              <span>{course.name}</span>
+            </Button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
-    <div className="mt-2 space-y-1 pl-6">
+    <div className="mt-2 space-y-1 pl-2">
       {courses.map((course) => {
         const isActiveCourse = course.id === activeCourse;
         return (
-          <div key={course.id}>
-            <div
-              className={`flex cursor-pointer items-center justify-between rounded-md px-2 py-1 ${isActiveCourse ? 'bg-indigo-50 font-semibold text-indigo-700' : 'bg-white hover:bg-gray-100'} `}
-            >
-              <button
-                className="flex w-full items-center gap-2 truncate text-sm"
-                onClick={() => router.push(`/${semesterId}/${course.id}`)}
+          <Collapsible
+            open={isActiveCourse}
+            onOpenChange={() =>
+              router.push(isActiveCourse ? '/' : `/${semesterId}/${course.id}`)
+            }
+            key={course.id}
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 rounded-lg border border-[#e6e6e6] p-3 font-medium text-[#1d1b20] shadow-sm transition-all duration-200 hover:border-[#d1d5db] hover:bg-[#f8f9fa] hover:shadow-md"
               >
-                <BookOpen size={16} />
-                {course.name}
-              </button>
-              <Edit2
-                size={16}
-                className="p-1 hover:text-gray-600"
-                onClick={() => {
-                  // TODO: implement course edit
-                }}
-              />
-            </div>
-
-            {isActiveCourse && depth >= 2 && (
+                <BookOpen className="h-4 w-4 text-[#5971e7]" />
+                <span>{course.name}</span>
+                {isActiveCourse ? (
+                  <ChevronUp className="ml-auto h-4 w-4 text-[#757575] transition-transform duration-200" />
+                ) : (
+                  <ChevronDown className="ml-auto h-4 w-4 text-[#757575] transition-transform duration-200" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="ml-6 space-y-1 overflow-hidden transition-all duration-500 ease-in-out">
               <LectureList
                 semesterId={semesterId}
                 courseId={course.id}
                 activeLecture={activeLecture}
               />
-            )}
-          </div>
+            </CollapsibleContent>
+          </Collapsible>
         );
       })}
 
       <button
-        className="mt-2 flex w-full items-center justify-center gap-2 rounded-md bg-indigo-50 py-1 text-sm text-indigo-700 hover:bg-indigo-100"
+        className="mt-2 flex w-full items-center justify-center gap-2 rounded-md bg-[#5971E7] py-1 text-white opacity-[73] hover:opacity-90"
         onClick={() => router.push(`/create/course?semesterId=${semesterId}`)}
       >
-        <Plus size={16} />
+        <Plus size={18} />
         <span>과목 추가</span>
       </button>
     </div>
@@ -201,25 +261,33 @@ function LectureList({
   const lectures = data?.lectures || [];
 
   return (
-    <div className="mt-1 space-y-1 pl-8">
+    <div className="mt-1 space-y-1 pl-2">
       {lectures.map((lec) => {
         const isActiveLec = lec.id === activeLecture;
         return (
-          <div
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 rounded-lg border border-[#e6e6e6] p-3 font-medium text-[#1d1b20] shadow-sm transition-all duration-200 hover:border-[#d1d5db] hover:bg-[#f8f9fa] hover:shadow-md"
             key={lec.id}
-            className={`flex cursor-pointer items-center rounded-md px-2 py-1 ${isActiveLec ? 'bg-indigo-100 font-medium text-indigo-800' : 'bg-white hover:bg-gray-100'} `}
-            onClick={() => router.push(`/${semesterId}/${courseId}/${lec.id}`)}
+            onClick={() =>
+              router.push(
+                isActiveLec
+                  ? `/${semesterId}/${courseId}`
+                  : `/${semesterId}/${courseId}/${lec.id}`,
+              )
+            }
           >
-            <span className="truncate text-sm">{lec.title}</span>
-          </div>
+            <Calendar className="h-4 w-4 text-[#5971e7]" />
+            <span>{lec.title}</span>
+          </Button>
         );
       })}
 
       <button
-        className="mt-1 flex w-full items-center justify-center gap-2 rounded-md bg-indigo-100 py-1 text-sm text-indigo-800 hover:bg-indigo-200"
+        className="mt-2 flex w-full items-center justify-center gap-2 rounded-md bg-[#5971E7] py-1 text-white opacity-[73] hover:opacity-90"
         onClick={() => router.push(`/create/lecture?courseId=${courseId}`)}
       >
-        <Plus size={14} />
+        <Plus size={18} />
         <span>강의 추가</span>
       </button>
     </div>
