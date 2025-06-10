@@ -45,7 +45,17 @@ export default function CourseCreateModal() {
   const createSemester = api.useMutation('post', '/v1/courses', {
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['get', '/v1/courses/semester/{semesterId}'],
+        queryKey: [
+          'get',
+          '/v1/courses/semester/{semesterId}',
+          {
+            params: {
+              path: {
+                semesterId: semesterId,
+              },
+            },
+          },
+        ],
       });
       router.back();
     },
@@ -62,7 +72,7 @@ export default function CourseCreateModal() {
   };
 
   return (
-    <ModalWrapper>
+    <ModalWrapper size="md">
       <DialogTitle as="h3" className="text-lg leading-6 font-semibold">
         과목 추가하기
       </DialogTitle>

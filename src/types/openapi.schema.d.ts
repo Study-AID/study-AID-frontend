@@ -319,8 +319,8 @@ export interface paths {
         get: operations["getQnaChatId"];
         put?: never;
         /**
-         * QnA 채팅방 생성
-         * @description 강의 자료를 기반으로 새로운 QnA 채팅방을 생성합니다.
+         * QnA 채팅방 생성(또는 기존 채팅방 반환)
+         * @description 강의 자료를 기반으로 새로운 QnA 채팅방을 생성합니다. 한 강의당 하나의 채팅방만 존재합니다.
          */
         post: operations["createChat"];
         delete?: never;
@@ -489,6 +489,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/login/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Google 로그인
+         * @description Google OAuth2 인증 코드로 로그인합니다.
+         */
+        post: operations["loginWithGoogle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/login/email": {
         parameters: {
             query?: never;
@@ -529,6 +549,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/quizzes/{id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get quiz result by quiz ID
+         * @description Retrieve the result of a specific quiz by its ID.
+         */
+        get: operations["getQuizResultById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/quizzes/lecture/{lectureId}": {
         parameters: {
             query?: never;
@@ -541,6 +581,26 @@ export interface paths {
          * @description Retrieve quizzes associated with a specific lecture ID.
          */
         get: operations["getQuizzesByLecture"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/quizzes/course/{courseId}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all quiz results by course ID
+         * @description Retrieve all quiz results associated with a specific course ID.
+         */
+        get: operations["getQuizResultsByCourse"];
         put?: never;
         post?: never;
         delete?: never;
@@ -625,6 +685,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/exams/{id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get exam result by exam ID
+         * @description Retrieve the result of an exam by its ID.
+         */
+        get: operations["getExamResultById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/exams/course/{courseId}": {
         parameters: {
             query?: never;
@@ -637,6 +717,26 @@ export interface paths {
          * @description Retrieve a list of exams associated with a specific course ID.
          */
         get: operations["getExamsByCourseId"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/exams/course/{courseId}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get exam results by course ID
+         * @description Retrieve a list of exam results associated with a specific course ID.
+         */
+        get: operations["getExamResultsByCourse"];
         put?: never;
         post?: never;
         delete?: never;
@@ -809,104 +909,52 @@ export interface components {
             /** @description Updated quiz title */
             title: string;
         };
-        Course: {
-            /** Format: uuid */
-            id?: string;
-            semester?: components["schemas"]["Semester"];
-            user?: components["schemas"]["User"];
-            name?: string;
-            /** Format: float */
-            targetGrade?: number;
-            /** Format: float */
-            earnedGrade?: number;
-            /** Format: int32 */
-            completedCredits?: number;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: date-time */
-            deletedAt?: string;
-        };
-        Lecture: {
-            /** Format: uuid */
-            id?: string;
-            course?: components["schemas"]["Course"];
-            user?: components["schemas"]["User"];
-            title?: string;
-            materialPath?: string;
-            materialType?: string;
-            displayOrderLex?: string;
-            parsedText?: components["schemas"]["ParsedText"];
-            note?: {
-                [key: string]: Record<string, never>;
-            };
-            summary?: {
-                [key: string]: Record<string, never>;
-            };
-            /** @enum {string} */
-            summaryStatus?: "not_started" | "in_progress" | "completed";
-            isVectorized?: boolean;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: date-time */
-            deletedAt?: string;
-        };
-        ParsedPage: {
-            text?: string;
-            /** Format: int32 */
-            page_number?: number;
-        };
-        /** @description Parsed text from PDF */
-        ParsedText: {
-            pages?: components["schemas"]["ParsedPage"][];
-            /** Format: int32 */
-            total_pages?: number;
-        };
-        Quiz: {
-            /** Format: uuid */
-            id?: string;
-            lecture?: components["schemas"]["Lecture"];
-            user?: components["schemas"]["User"];
-            title?: string;
-            /** @enum {string} */
-            status?: "generate_in_progress" | "not_started" | "submitted" | "partially_graded" | "graded";
-            /** Format: date-time */
-            contentsGenerateAt?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: date-time */
-            deletedAt?: string;
-        };
-        /** @description Quiz item list */
-        QuizItem: {
-            /** Format: uuid */
-            id?: string;
-            quiz?: components["schemas"]["Quiz"];
-            user?: components["schemas"]["User"];
-            question?: string;
-            /** @enum {string} */
-            questionType?: "true_or_false" | "multiple_choice" | "short_answer" | "essay" | "custom";
-            explanation?: string;
+        /** @description Quiz item response DTO */
+        QuizItemResponse: {
+            /**
+             * Format: uuid
+             * @description Quiz item ID
+             */
+            id: string;
+            /** @description Question text */
+            question: string;
+            /**
+             * @description Question type
+             * @enum {string}
+             */
+            questionType: "true_or_false" | "multiple_choice" | "short_answer" | "essay" | "custom";
+            /** @description Explanation */
+            explanation: string;
+            /** @description True/False answer for true_or_false type */
             isTrueAnswer?: boolean;
+            /** @description Multiple choice options */
             choices?: string[];
+            /** @description Correct answer indices for multiple choice */
             answerIndices?: number[];
+            /** @description Text answer for short_answer/essay type */
             textAnswer?: string;
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Display order
+             */
             displayOrder?: number;
-            /** Format: float */
+            /**
+             * Format: float
+             * @description Points
+             */
             points?: number;
+            /** @description Is liked */
             isLiked?: boolean;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: date-time */
-            deletedAt?: string;
+            /**
+             * Format: date-time
+             * @description Creation time
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Last update time
+             */
+            updatedAt: string;
         };
         /** @description Quiz response DTO */
         QuizResponse: {
@@ -914,24 +962,24 @@ export interface components {
              * Format: uuid
              * @description Quiz ID
              */
-            id?: string;
+            id: string;
             /**
              * Format: uuid
              * @description Lecture ID
              */
-            lectureId?: string;
+            lectureId: string;
             /**
              * Format: uuid
              * @description User ID
              */
-            userId?: string;
+            userId: string;
             /** @description Quiz title */
-            title?: string;
+            title: string;
             /**
              * @description Quiz status
              * @enum {string}
              */
-            status?: "generate_in_progress" | "not_started" | "submitted" | "partially_graded" | "graded";
+            status: "generate_in_progress" | "not_started" | "submitted" | "partially_graded" | "graded";
             /**
              * Format: date-time
              * @description Contents generation time
@@ -941,71 +989,14 @@ export interface components {
              * Format: date-time
              * @description Creation time
              */
-            createdAt?: string;
+            createdAt: string;
             /**
              * Format: date-time
              * @description Last update time
              */
-            updatedAt?: string;
+            updatedAt: string;
             /** @description Quiz item list */
-            quizItems?: components["schemas"]["QuizItem"][];
-        };
-        School: {
-            /** Format: uuid */
-            id?: string;
-            name?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: date-time */
-            deletedAt?: string;
-        };
-        Semester: {
-            /** Format: uuid */
-            id?: string;
-            user?: components["schemas"]["User"];
-            name?: string;
-            /** Format: int32 */
-            year?: number;
-            /** @enum {string} */
-            season?: "spring" | "summer" | "fall" | "winter";
-            /** Format: date */
-            startDate?: string;
-            /** Format: date */
-            endDate?: string;
-            /** Format: float */
-            targetGrade?: number;
-            /** Format: float */
-            earnedGrade?: number;
-            /** Format: int32 */
-            completedCredits?: number;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: date-time */
-            deletedAt?: string;
-        };
-        User: {
-            /** Format: uuid */
-            id?: string;
-            school?: components["schemas"]["School"];
-            name?: string;
-            email?: string;
-            passwordHash?: string;
-            googleId?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: date-time */
-            deletedAt?: string;
-            /** Format: date-time */
-            lastLogin?: string;
-            isActive?: boolean;
-            /** @enum {string} */
-            authType?: "email" | "google";
+            quizItems?: components["schemas"]["QuizItemResponse"][];
         };
         /** @description Lecture update request */
         UpdateLectureRequest: {
@@ -1090,6 +1081,17 @@ export interface components {
              */
             endPage?: number;
         };
+        ParsedPage: {
+            text?: string;
+            /** Format: int32 */
+            page_number?: number;
+        };
+        /** @description Parsed text from PDF */
+        ParsedText: {
+            pages?: components["schemas"]["ParsedPage"][];
+            /** Format: int32 */
+            total_pages?: number;
+        };
         /** @description Complete lecture summary */
         Summary: {
             metadata?: components["schemas"]["Metadata"];
@@ -1124,6 +1126,25 @@ export interface components {
             /** @description Updated exam title */
             title: string;
         };
+        Course: {
+            /** Format: uuid */
+            id?: string;
+            semester?: components["schemas"]["Semester"];
+            user?: components["schemas"]["User"];
+            name?: string;
+            /** Format: float */
+            targetGrade?: number;
+            /** Format: float */
+            earnedGrade?: number;
+            /** Format: int32 */
+            completedCredits?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: date-time */
+            deletedAt?: string;
+        };
         Exam: {
             /** Format: uuid */
             id?: string;
@@ -1142,6 +1163,7 @@ export interface components {
             /** Format: date-time */
             deletedAt?: string;
         };
+        /** @description Exam item list */
         ExamItem: {
             /** Format: uuid */
             id?: string;
@@ -1210,6 +1232,63 @@ export interface components {
             updatedAt?: string;
             /** @description Exam item list */
             examItems?: components["schemas"]["ExamItem"][];
+        };
+        School: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: date-time */
+            deletedAt?: string;
+        };
+        Semester: {
+            /** Format: uuid */
+            id?: string;
+            user?: components["schemas"]["User"];
+            name?: string;
+            /** Format: int32 */
+            year?: number;
+            /** @enum {string} */
+            season?: "spring" | "summer" | "fall" | "winter";
+            /** Format: date */
+            startDate?: string;
+            /** Format: date */
+            endDate?: string;
+            /** Format: float */
+            targetGrade?: number;
+            /** Format: float */
+            earnedGrade?: number;
+            /** Format: int32 */
+            completedCredits?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: date-time */
+            deletedAt?: string;
+        };
+        User: {
+            /** Format: uuid */
+            id?: string;
+            school?: components["schemas"]["School"];
+            name?: string;
+            email?: string;
+            passwordHash?: string;
+            googleId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: date-time */
+            deletedAt?: string;
+            /** Format: date-time */
+            lastLogin?: string;
+            isActive?: boolean;
+            /** @enum {string} */
+            authType?: "email" | "google";
         };
         /** @description Course update request */
         UpdateCourseRequest: {
@@ -1420,40 +1499,37 @@ export interface components {
             action: string;
             isLiked: boolean;
         };
-        CreateExamInput: {
-            /** Format: uuid */
-            courseId?: string;
-            /** Format: uuid */
-            userId?: string;
-            title?: string;
-            referencedLectures?: string[];
-            /** Format: int32 */
-            trueOrFalseCount?: number;
-            /** Format: int32 */
-            multipleChoiceCount?: number;
-            /** Format: int32 */
-            shortAnswerCount?: number;
-            /** Format: int32 */
-            essayCount?: number;
-        };
-        ExamOutput: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            courseId?: string;
-            /** Format: uuid */
-            userId?: string;
-            title?: string;
-            /** @enum {string} */
-            status?: "generate_in_progress" | "not_started" | "submitted" | "partially_graded" | "graded";
-            referencedLectures?: string[];
-            /** Format: date-time */
-            contentsGenerateAt?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            examItems?: components["schemas"]["ExamItem"][];
+        /** @description exam creation request */
+        CreateExamRequest: {
+            /**
+             * Format: uuid
+             * @description ID of the course
+             */
+            courseId: string;
+            /** @description Title of the exam */
+            title: string;
+            /** @description Referenced lectures for the exam */
+            referencedLectures: string[];
+            /**
+             * Format: int32
+             * @description Number of true or false questions
+             */
+            trueOrFalseCount: number;
+            /**
+             * Format: int32
+             * @description Number of multiple choice questions
+             */
+            multipleChoiceCount: number;
+            /**
+             * Format: int32
+             * @description Number of short answer questions
+             */
+            shortAnswerCount: number;
+            /**
+             * Format: int32
+             * @description Number of essay questions
+             */
+            essayCount: number;
         };
         /** @description Exam responses of user */
         SubmitExamItem: {
@@ -1527,6 +1603,10 @@ export interface components {
         LogoutRequest: {
             refreshToken?: string;
         };
+        GoogleLoginRequest: {
+            code?: string;
+            redirectUri?: string;
+        };
         EmailLoginRequest: {
             email?: string;
             password?: string;
@@ -1536,10 +1616,105 @@ export interface components {
             /** @description List of semesters */
             semesters?: components["schemas"]["SemesterResponse"][];
         };
+        EssayCriteriaAnalysis: {
+            criteria?: components["schemas"]["ScoringCriterion"][];
+            analysis?: string;
+        };
+        /** @description Elements of the Quiz Result(Quiz Item, Quiz Response) */
+        QuizResultElement: {
+            /** Format: uuid */
+            quizItemId?: string;
+            question?: string;
+            /** @enum {string} */
+            questionType?: "true_or_false" | "multiple_choice" | "short_answer" | "essay" | "custom";
+            explanation?: string;
+            isTrueAnswer?: boolean;
+            choices?: string[];
+            answerIndices?: number[];
+            textAnswer?: string;
+            /** Format: float */
+            points?: number;
+            /** Format: uuid */
+            quizResponseId?: string;
+            isCorrect?: boolean;
+            selectedBool?: boolean;
+            selectedIndices?: number[];
+            textAnswerOfUser?: string;
+            essayCriteriaAnalysis?: components["schemas"]["EssayCriteriaAnalysis"];
+            /** Format: float */
+            score?: number;
+        };
+        /** @description Quiz Result response DTO */
+        QuizResultResponse: {
+            /**
+             * Format: uuid
+             * @description Quiz Result ID
+             */
+            id?: string;
+            /**
+             * Format: uuid
+             * @description Quiz ID
+             */
+            quizId?: string;
+            /**
+             * Format: uuid
+             * @description User ID
+             */
+            userId?: string;
+            /**
+             * Format: float
+             * @description Score
+             */
+            score?: number;
+            /**
+             * Format: float
+             * @description Maximum Score
+             */
+            maxScore?: number;
+            /** @description Feedback */
+            feedback?: string;
+            /**
+             * Format: date-time
+             * @description Start Time
+             */
+            startTime?: string;
+            /**
+             * Format: date-time
+             * @description End Time
+             */
+            endTime?: string;
+            /**
+             * Format: date-time
+             * @description Creation Time
+             */
+            createdAt?: string;
+            /**
+             * Format: date-time
+             * @description Last Update Time
+             */
+            updatedAt?: string;
+            /** @description Elements of the Quiz Result(Quiz Item, Quiz Response) */
+            quizResultElements?: components["schemas"]["QuizResultElement"][];
+        };
+        ScoringCriterion: {
+            name?: string;
+            description?: string;
+            /** Format: double */
+            max_points?: number;
+            /** Format: double */
+            earned_points?: number;
+        };
         /** @description List of quizzes response */
         QuizListResponse: {
             /** @description List of quizzes response */
             quizzes?: components["schemas"]["QuizResponse"][];
+        };
+        /** @description List of quiz results response */
+        QuizResultListResponse: {
+            /** @description List of quiz results response */
+            quizResults?: components["schemas"]["QuizResultResponse"][];
+            /** Format: float */
+            averageScore?: number;
         };
         GetQnaChatIdResponse: {
             /** Format: uuid */
@@ -1558,6 +1733,7 @@ export interface components {
             messageId: string;
             role: string;
             content: string;
+            references?: components["schemas"]["ReferenceChunkResponse"][];
             /** Format: date-time */
             createdAt: string;
             isLiked: boolean;
@@ -1579,13 +1755,65 @@ export interface components {
             /** @description List of lectures response */
             lectures?: components["schemas"]["LectureResponse"][];
         };
-        ExamListOutput: {
-            exams?: components["schemas"]["ExamOutput"][];
+        /** @description Exam Result response DTO */
+        ExamResultResponse: {
+            /**
+             * Format: uuid
+             * @description Exam Result ID
+             */
+            id?: string;
+            /**
+             * Format: uuid
+             * @description Exam ID
+             */
+            examId?: string;
+            /**
+             * Format: uuid
+             * @description User ID
+             */
+            userId?: string;
+            /**
+             * Format: float
+             * @description Score
+             */
+            score?: number;
+            /**
+             * Format: float
+             * @description Maximum Score
+             */
+            maxScore?: number;
+            /** @description Feedback */
+            feedback?: string;
+            /**
+             * Format: date-time
+             * @description Start Time
+             */
+            startTime?: string;
+            /**
+             * Format: date-time
+             * @description End Time
+             */
+            endTime?: string;
+            /**
+             * Format: date-time
+             * @description Creation Time
+             */
+            createdAt?: string;
+            /**
+             * Format: date-time
+             * @description Last Update Time
+             */
+            updatedAt?: string;
         };
         /** @description List of exams response */
         ExamListResponse: {
             /** @description List of exams response */
             exams?: components["schemas"]["ExamResponse"][];
+        };
+        /** @description List of exam results response */
+        ExamResultListResponse: {
+            /** @description List of exam results response */
+            examResults?: components["schemas"]["ExamResultResponse"][];
         };
         /** @description List of courses response */
         CourseListResponse: {
@@ -2246,12 +2474,10 @@ export interface operations {
     };
     getExamById: {
         parameters: {
-            query: {
-                /** @description ID of the exam to retrieve */
-                examId: string;
-            };
+            query?: never;
             header?: never;
             path: {
+                /** @description ID of the exam to retrieve */
                 id: string;
             };
             cookie?: never;
@@ -2264,7 +2490,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ExamOutput"];
+                    "*/*": components["schemas"]["ExamResponse"];
                 };
             };
             /** @description User does not have access to this quiz */
@@ -2298,12 +2524,10 @@ export interface operations {
     };
     updateExam: {
         parameters: {
-            query: {
-                /** @description ID of the exam to update */
-                examId: string;
-            };
+            query?: never;
             header?: never;
             path: {
+                /** @description ID of the exam to update */
                 id: string;
             };
             cookie?: never;
@@ -2364,12 +2588,10 @@ export interface operations {
     };
     deleteExam: {
         parameters: {
-            query: {
-                /** @description ID of the exam to delete */
-                examId: string;
-            };
+            query?: never;
             header?: never;
             path: {
+                /** @description ID of the exam to delete */
                 id: string;
             };
             cookie?: never;
@@ -2879,7 +3101,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 채팅방 생성 성공 */
+            /** @description 채팅방 생성(또는 기존 채팅방 반환) 성공 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3055,7 +3277,7 @@ export interface operations {
         /** @description Exam creation request body */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateExamInput"];
+                "application/json": components["schemas"]["CreateExamRequest"];
             };
         };
         responses: {
@@ -3065,7 +3287,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ExamOutput"];
+                    "*/*": components["schemas"]["ExamResponse"];
                 };
             };
             /** @description Invalid input data */
@@ -3283,6 +3505,39 @@ export interface operations {
             };
         };
     };
+    loginWithGoogle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleLoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Google 로그인 성공 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Google 로그인 오류 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     loginWithEmail: {
         parameters: {
             query?: never;
@@ -3383,6 +3638,65 @@ export interface operations {
             };
         };
     };
+    getQuizResultById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Quiz ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Quiz result retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizResultResponse"];
+                };
+            };
+            /** @description The quiz has not been graded yet */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizResultResponse"];
+                };
+            };
+            /** @description User does not have access to this quiz */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizResultResponse"];
+                };
+            };
+            /** @description Quiz result not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizResultResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizResultResponse"];
+                };
+            };
+        };
+    };
     getQuizzesByLecture: {
         parameters: {
             query?: never;
@@ -3429,6 +3743,56 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["QuizListResponse"];
+                };
+            };
+        };
+    };
+    getQuizResultsByCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Course ID */
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Quiz results retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizResultListResponse"];
+                };
+            };
+            /** @description User does not have access to this quiz */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizResultListResponse"];
+                };
+            };
+            /** @description Course not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizResultListResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizResultListResponse"];
                 };
             };
         };
@@ -3575,6 +3939,65 @@ export interface operations {
             };
         };
     };
+    getExamResultById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Exam ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Exam result retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamResultResponse"];
+                };
+            };
+            /** @description The exam has not been graded yet */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamResultResponse"];
+                };
+            };
+            /** @description User does not have access to this quiz */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamResultResponse"];
+                };
+            };
+            /** @description Exam result not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamResultResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamResultResponse"];
+                };
+            };
+        };
+    };
     getExamsByCourseId: {
         parameters: {
             query?: never;
@@ -3593,7 +4016,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ExamListOutput"];
+                    "*/*": components["schemas"]["ExamListResponse"];
                 };
             };
             /** @description User does not have access to this quiz */
@@ -3621,6 +4044,56 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ExamListResponse"];
+                };
+            };
+        };
+    };
+    getExamResultsByCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the course to retrieve exam results for */
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Exam results found */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamResultListResponse"];
+                };
+            };
+            /** @description User does not have access to this quiz */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamResultListResponse"];
+                };
+            };
+            /** @description Course not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamResultListResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamResultListResponse"];
                 };
             };
         };

@@ -8,6 +8,7 @@ import {
   Transition,
 } from '@headlessui/react';
 import { ChevronDown } from 'lucide-react';
+import Link from 'next/link';
 import { Fragment } from 'react';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Button } from './ui/button';
@@ -46,7 +47,10 @@ export function UserPlaceholder() {
         alignOffset={0}
       >
         <DropdownMenuItem>프로필</DropdownMenuItem>
-        <DropdownMenuItem>설정</DropdownMenuItem>
+        <DropdownMenuItem>
+          {/* api/privacy-policy.html */}
+          <Link href="/api/privacy-policy.html">개인정보처리 방침</Link>
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
             //get refreshToken
@@ -65,6 +69,10 @@ export function UserPlaceholder() {
               },
               {
                 onSuccess: () => {
+                  // Clear session storage
+                  sessionStorage.removeItem('access_token');
+                  sessionStorage.removeItem('refresh_token');
+
                   window.location.href = '/';
                 },
                 onError: (error) => {

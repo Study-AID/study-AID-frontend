@@ -41,7 +41,17 @@ export default function SemesterPage() {
   const updateCourse = api.useMutation('put', '/v1/courses/{id}', {
     onSuccess: (data) => {
       utils.invalidateQueries({
-        queryKey: ['/v1/courses/semester/{semesterId}'],
+        queryKey: [
+          'get',
+          '/v1/courses/semester/{semesterId}',
+          {
+            params: {
+              path: {
+                semesterId: semester,
+              },
+            },
+          },
+        ],
       });
 
       console.log('invalidate');

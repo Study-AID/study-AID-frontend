@@ -1,6 +1,6 @@
 'use client';
 
-export default function QnAHistoryComponent() {
+export default function QnAHistoryPage() {
   return (
     <div>
       <div className="flex h-full flex-col items-center justify-center">

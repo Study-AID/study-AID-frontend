@@ -11,8 +11,10 @@ import { Fragment } from 'react';
 
 export default function ModalWrapper({
   children,
+  size,
 }: {
   children: React.ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }) {
   const router = useRouter();
 
@@ -43,7 +45,9 @@ export default function ModalWrapper({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <DialogPanel
+                className={`w-full transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all ${size === 'sm' ? 'max-w-sm' : size === 'md' ? 'max-w-md' : size === 'lg' ? 'max-w-lg' : size === 'xl' ? 'max-w-xl' : ''}`}
+              >
                 {children}
               </DialogPanel>
             </TransitionChild>

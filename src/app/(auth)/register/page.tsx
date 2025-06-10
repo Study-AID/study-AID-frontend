@@ -84,6 +84,14 @@ export default function Signup() {
           로그인
         </Link>
       </p>
+      <div className="mt-4 text-center text-xs text-gray-500">
+        <Link
+          href="/api/privacy-policy.html"
+          className="text-indigo-600 hover:underline"
+        >
+          개인정보처리방침
+        </Link>
+      </div>
     </>
   );
 }

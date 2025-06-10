@@ -2,6 +2,7 @@ import { AuthProvider } from '@/providers/authProvider';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { LectureUploadProvider } from '@/providers/uploadProvider';
 import Header from './Header';
+import LayoutLoading from './layoutLoading';
 import Sidebar from './sidebar';
 
 export default async function DashboardLayout({
@@ -14,7 +15,10 @@ export default async function DashboardLayout({
   return (
     <AuthProvider>
       <LectureUploadProvider>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light">
+          {/* if query isPending is true, show loading spinner */}
+          <LayoutLoading />
+
           {modal}
           <div className="flex min-h-screen bg-[#f9fafb]">
             <div className="flex flex-col">

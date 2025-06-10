@@ -20,6 +20,8 @@ const nextConfig: NextConfig = {
 
     return config;
   },
+  // Disable ISR status in development mode
+  devIndicators: false,
 };
 
 export default nextConfig;

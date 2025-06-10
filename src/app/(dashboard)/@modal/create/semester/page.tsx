@@ -46,7 +46,7 @@ export default function SemesterCreateModal() {
   };
 
   return (
-    <ModalWrapper>
+    <ModalWrapper size="md">
       <DialogTitle as="h3" className="text-lg leading-6 font-semibold">
         학기 추가하기
       </DialogTitle>
