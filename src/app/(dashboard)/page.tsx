@@ -128,7 +128,7 @@ export default function DashboardPage() {
 
   const updateSemester = api.useMutation('put', '/v1/semesters/{id}', {
     onSuccess: (data) => {
-      utils.invalidateQueries({ queryKey: ['/v1/semesters'] });
+      utils.invalidateQueries({ queryKey: ['get', '/v1/semesters'] });
       setEditingId(null);
     },
   });

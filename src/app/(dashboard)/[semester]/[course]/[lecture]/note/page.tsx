@@ -21,6 +21,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { api } from '@/api/client';
+import { useParams } from 'next/navigation';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -28,12 +29,28 @@ const observerConfig = {
   threshold: 0,
 };
 
-interface ChatMessage {
-  messageId: string;
-  role: 'user' | 'assistant';
-  content: string;
-  createdAt: Date;
-  isLiked: boolean;
+export default function NotePage() {
+  const params = useParams();
+
+  const lectureId = params.lecture as string;
+
+  const { data, isLoading, error } = api.useQuery('get', '/v1/lectures/{id}', {
+    params: {
+      path: {
+        id: lectureId,
+      },
+    },
+  });
+
+  if (isLoading || !data) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <span className="text-lg font-semibold text-gray-700">Loading...</span>
+      </div>
+    );
+  }
+
+  return <NoteComponent lecture={data} />;
 }
 
 function ResizeHandle({ onResize }: { onResize: (deltaX: number) => void }) {
@@ -43,15 +60,14 @@ function ResizeHandle({ onResize }: { onResize: (deltaX: number) => void }) {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging) {
-        // movementX 대신 직접 계산하여 더 정확한 값 사용
-        const deltaX = e.clientX - lastMouseX.current;
-        lastMouseX.current = e.clientX;
+        const deltaX = e.movementX;
         onResize(deltaX);
       }
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
+      document.body.style.userSelect = '';
     };
 
     if (isDragging) {
@@ -66,6 +82,8 @@ function ResizeHandle({ onResize }: { onResize: (deltaX: number) => void }) {
   }, [isDragging, onResize]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault(); // 텍스트 선택 방지
+    document.body.style.userSelect = 'none';
     setIsDragging(true);
     lastMouseX.current = e.clientX;
   };
@@ -94,6 +112,10 @@ function ChatWidget({
   contexts?: string[];
   removeContext: (index: number) => void;
 }) {
+  const [recommendedQuestions, setRecommendedQuestions] = useState<string[]>(
+    [],
+  );
+
   const {
     data: messagesData,
     isLoading,
@@ -133,6 +155,7 @@ function ChatWidget({
           role: 'system',
           content: '메시지를 불러오는 중 오류가 발생했습니다.',
           createdAt: new Date(),
+          references: undefined,
           isLiked: false,
         },
       ];
@@ -146,6 +169,7 @@ function ChatWidget({
   const handleSendMessage = () => {
     if (!inputText.trim()) return;
 
+    setRecommendedQuestions([]);
     questionMutation.mutate(
       {
         params: {
@@ -154,12 +178,16 @@ function ChatWidget({
           },
         },
         body: {
-          question: `\`\`\`${contexts}\`\`\` \n ${inputText}`,
+          question:
+            contexts && contexts.length > 0
+              ? `\`\`\`\n${contexts.join('\n---\n')}\n\`\`\` \n ${inputText}`
+              : `${inputText}`,
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (data: components['schemas']['QnaChatMessageResponse']) => {
           setInputText('');
+          setRecommendedQuestions(data.recommendedQuestions || []);
         },
       },
     );
@@ -181,7 +209,7 @@ function ChatWidget({
   if (!isOpen) return null;
 
   return (
-    <div className="absolute bottom-16 left-4 z-30 flex h-96 w-80 flex-col rounded-lg border border-gray-200 bg-white shadow-2xl">
+    <div className="absolute bottom-16 left-4 z-30 flex h-[34rem] w-[26rem] flex-col rounded-lg border border-gray-200 bg-white shadow-2xl">
       {/* 헤더 */}
       <div className="flex items-center justify-between rounded-t-lg bg-[#5971e7] p-3 text-white">
         <h3 className="text-sm font-semibold">QnA Chat</h3>
@@ -208,8 +236,8 @@ function ChatWidget({
             <div
               key={message.messageId}
               className={clsx(
-                'flex',
-                message.role === 'user' ? 'justify-end' : 'justify-start',
+                'flex flex-col gap-1',
+                message.role === 'user' ? 'items-end' : 'items-start',
               )}
             >
               <div
@@ -228,6 +256,25 @@ function ChatWidget({
                   />
                 )}
               </div>
+
+              {/* 출처 */}
+              {message.references && (
+                <div className="max-w-[85%]">
+                  <div className="flex gap-x-1 overflow-x-scroll">
+                    {message.references.map((ref, index) => (
+                      <div
+                        key={`${message.messageId}-ref-${index}`}
+                        className="mt-1 flex max-h-16 max-w-24 flex-col gap-1 truncate rounded-sm bg-gray-100 p-1 text-xs text-gray-500"
+                      >
+                        <span className="text-[0.5rem]">
+                          <span className="font-semibold">p.</span> {ref.page}
+                        </span>
+                        <div className="truncate">{ref.text}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ))
         )}
@@ -236,6 +283,22 @@ function ChatWidget({
             <div className="rounded-lg bg-gray-100 p-2 text-xs text-gray-800">
               답변을 생성하고 있습니다...
             </div>
+          </div>
+        )}
+        {recommendedQuestions.length > 0 && (
+          <div className="mt-2 flex max-w-[70%] flex-col gap-1">
+            <span className="text-xs text-gray-500">이 질문이 좋아보여요!</span>
+            {recommendedQuestions.map((question, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setInputText(question);
+                }}
+                className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200"
+              >
+                {question}
+              </button>
+            ))}
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -297,7 +360,7 @@ function ChatWidget({
   );
 }
 
-export default function NoteComponent({
+function NoteComponent({
   lecture,
 }: {
   lecture: components['schemas']['LectureResponse'];
@@ -314,7 +377,6 @@ export default function NoteComponent({
   } | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [leftPanelWidth, setLeftPanelWidth] = useState(60); // 퍼센트 단위
-  const [pendingQuestion, setPendingQuestion] = useState<string>('');
   const [contexts, setContexts] = useState<string[]>([]);
 
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -340,22 +402,61 @@ export default function NoteComponent({
     {
       onSuccess: () => {
         utils.invalidateQueries({
-          queryKey: ['/v1/lectures/{lectureId}/qna-chat'],
+          queryKey: [
+            'get',
+            '/v1/lectures/{lectureId}/qna-chat',
+            {
+              params: {
+                path: {
+                  lectureId: lecture.id,
+                },
+              },
+            },
+          ],
           exact: true,
         });
         utils.invalidateQueries({
-          queryKey: ['/v1/lectures/{lectureId}/qna-chat/messages'],
+          queryKey: [
+            'get',
+            '/v1/lectures/{lectureId}/qna-chat/messages',
+            {
+              params: {
+                path: {
+                  lectureId: lecture.id,
+                },
+              },
+            },
+          ],
           exact: true,
         });
       },
     },
   );
 
+  // 채팅방 생성시 자동으로 열기
+  useEffect(() => {
+    if (chat && !isLoading && !error) {
+      setIsChatOpen(true);
+    }
+  }, [chat, isLoading, error]);
+
   // 요약본 상태 polling 10 seconds
   useEffect(() => {
     const invalidate = setInterval(() => {
       if (lecture.summaryStatus !== 'completed') {
-        utils.invalidateQueries({ queryKey: ['/v1/lectures/{id}'] });
+        utils.invalidateQueries({
+          queryKey: [
+            'get',
+            '/v1/lectures/{id}',
+            {
+              params: {
+                path: {
+                  id: lecture.id,
+                },
+              },
+            },
+          ],
+        });
       }
     }, 10000);
 
@@ -419,7 +520,7 @@ export default function NoteComponent({
     if (!containerElement) return;
 
     const containerWidth = containerElement.offsetWidth;
-    const deltaPercent = (deltaX / 3 / containerWidth) * 100;
+    const deltaPercent = (deltaX / containerWidth) * 100;
 
     setLeftPanelWidth((prev) => {
       const newWidth = prev + deltaPercent;
@@ -430,23 +531,41 @@ export default function NoteComponent({
   const isSelectionInSummary = (selection: Selection): boolean => {
     if (!selection.rangeCount || !summaryRef.current) return false;
 
-    const range = selection.getRangeAt(0);
-    const commonAncestor = range.commonAncestorContainer;
+    let element = selection.getRangeAt(0).commonAncestorContainer;
 
-    // 선택된 텍스트의 부모 요소가 요약본 영역 안에 있는지 확인
-    let element =
-      commonAncestor.nodeType === Node.TEXT_NODE
-        ? commonAncestor.parentElement
-        : (commonAncestor as Element);
+    if (element.nodeType === Node.TEXT_NODE) element = element.parentElement!;
 
     while (element) {
-      if (element === summaryRef.current) {
-        return true;
-      }
-      element = element.parentElement;
+      if (element === summaryRef.current) return true;
+      element = (element as HTMLElement).parentElement!;
     }
-
     return false;
+  };
+
+  const updateTooltipPosition = () => {
+    const sel = window.getSelection();
+
+    if (!sel || sel.isCollapsed) return;
+
+    const text = sel.toString().trim();
+
+    if (!text) return;
+
+    const range = sel.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+
+    const container =
+      summaryRef.current &&
+      summaryRef.current.contains(range.commonAncestorContainer)
+        ? summaryRef.current
+        : viewerRef.current;
+
+    if (!container) return;
+
+    const containerRect = (container as HTMLElement).getBoundingClientRect();
+    const top = rect.top - containerRect.top;
+    const left = rect.left - containerRect.left + rect.width / 2;
+    setToolbarPos({ top, left });
   };
 
   const addContext = (text: string) => {
@@ -457,14 +576,17 @@ export default function NoteComponent({
     setContexts((prev) => prev.filter((_, i) => i !== index));
   };
 
+  //툴팁 위치 설정
   useEffect(() => {
     const handleSelectionChange = () => {
       const sel = window.getSelection();
+
       if (!sel || sel.isCollapsed) {
         setSelectionText('');
         setToolbarPos(null);
         return;
       }
+
       const text = sel.toString().trim();
       if (!text) {
         setSelectionText('');
@@ -476,23 +598,15 @@ export default function NoteComponent({
       const range = sel.getRangeAt(0);
       const rect = range.getBoundingClientRect();
 
-      // 선택된 텍스트가 요약본 영역에 있는지 확인
-      const isInSummary = isSelectionInSummary(sel);
+      const container = isSelectionInSummary(sel)
+        ? summaryRef.current!
+        : viewerRef.current!;
 
-      let containerRect = { top: 0, left: 0 };
+      const containerRect = container.getBoundingClientRect();
 
-      if (isInSummary && summaryRef.current) {
-        // 요약본 영역의 경우 요약본 컨테이너를 기준으로 계산
-        containerRect = summaryRef.current.getBoundingClientRect();
-      } else if (viewerRef.current) {
-        // PDF 뷰어 영역의 경우 기존대로 계산
-        containerRect = viewerRef.current.getBoundingClientRect();
-      }
-
-      setToolbarPos({
-        top: rect.top - containerRect.top - 40, // 툴바 높이만큼 위로 띄우기
-        left: rect.left - containerRect.left,
-      });
+      const top = rect.top - containerRect.top;
+      const left = rect.left - containerRect.left + rect.width / 2;
+      setToolbarPos({ top, left });
       setSelectionText(text);
     };
 
@@ -502,12 +616,53 @@ export default function NoteComponent({
     };
   }, []);
 
+  useEffect(() => {
+    const handleMouseUp = () => {
+      updateTooltipPosition();
+    };
+    const handleMouseDown = () => {
+      setToolbarPos(null);
+    };
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousedown', handleMouseDown);
+    };
+  }, []);
+
   return (
     <div className="flex max-h-[calc(100dvh-8rem)] min-h-0 flex-1 gap-4">
+      {createChatMutation.isPending && (
+        <div className="fixed bottom-4 left-1/2 z-50 flex w-fit -translate-x-1/2 items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white shadow-lg">
+          <span>챗봇이 강의자료 분석을 시작했어요! 잠시만 기다려주세요...</span>
+          <svg
+            className="ml-2 h-6 w-6 animate-spin text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2.93 6.343A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3.93-1.595z"
+            ></path>
+          </svg>
+        </div>
+      )}
       {/* PDF 뷰어 카드 */}
       <div
         style={{ width: `${leftPanelWidth}%` }}
         className="relative flex min-h-0 flex-1 flex-col rounded-2xl bg-white shadow-lg"
+        ref={viewerRef}
       >
         {/* 툴바: scroll 영역 밖에 고정 */}
         <div className="z-10 flex flex-none items-center justify-between border-b bg-gray-100 px-4 py-2">
@@ -565,7 +720,6 @@ export default function NoteComponent({
                   PDF를 불러올 수 없습니다.
                 </div>
               }
-              inputRef={viewerRef}
             >
               {Array.from({ length: numPages }, (_, idx) => (
                 <div
@@ -643,28 +797,23 @@ export default function NoteComponent({
 
         {toolbarPos && !isSelectionInSummary(window.getSelection()!) && (
           <div
-            className="absolute z-10 flex w-fit items-center gap-x-2 rounded-md p-2 text-white shadow-lg"
+            className="pointer-events-none absolute z-10"
             style={{
-              top: toolbarPos.top - 4,
+              top: toolbarPos.top - 8,
               left: toolbarPos.left,
-              background: 'rgba(0,0,0,0.75)',
-              zIndex: 10,
+              transform: 'translateX(-50%)',
             }}
           >
-            <button
-              className="flex w-fit items-center gap-1"
-              onClick={() => /* 번역 API 호출 */ null}
-            >
-              <Globe size={16} />
-              <span className="whitespace-nowrap">번역하기</span>
-            </button>
-            <button
-              className="flex w-fit items-center gap-1"
-              onClick={() => /* 질문 모달 열기 */ null}
-            >
-              <MessageCircle size={16} />
-              <span className="whitespace-nowrap">질문하기</span>
-            </button>
+            <div className="flex w-fit items-center gap-x-2 rounded-md bg-black/75 p-2 text-white shadow-lg">
+              <button className="pointer-events-auto flex items-center gap-1">
+                <Globe size={16} />
+                <span>번역하기</span>
+              </button>
+              <button className="pointer-events-auto flex items-center gap-1">
+                <MessageCircle size={16} />
+                <span>질문하기</span>
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -27,6 +27,7 @@ import { UserPlaceholder } from './UserPlaceholder';
 
 export default function Sidebar() {
   const { semester: semId, course: crsId, lecture: lecId } = useParams();
+  const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // depth: 0 = home, 1 = semester, 2 = course, 3 = lecture
@@ -43,7 +44,14 @@ export default function Sidebar() {
     >
       <div className="flex items-center justify-between border-b border-[#e6e6e6] px-3 py-2.5 text-xl">
         {!isSidebarCollapsed && (
-          <h1 className="font-semibold text-[#1d1b20]">Study AID</h1>
+          <h1
+            className="cursor-pointer font-semibold text-[#1d1b20]"
+            onClick={() => {
+              router.push('/');
+            }}
+          >
+            Study AID
+          </h1>
         )}
         <Button
           variant="ghost"

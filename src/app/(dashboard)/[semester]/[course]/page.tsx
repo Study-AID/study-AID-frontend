@@ -3,12 +3,61 @@
 import { api } from '@/api/client';
 import { Button } from '@/component/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/component/ui/card';
-import { LayoutGrid, Plus, Search } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { LayoutGrid, Plus, Router, Search } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { LectureList } from './_components/lecture';
+
+const CircularProgress = ({
+  value,
+  total,
+  size = 80,
+}: {
+  value: number;
+  total: number;
+  size?: number;
+}) => {
+  const percentage = (value / total) * 100;
+  const radius = (size - 8) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDasharray = circumference;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90 transform">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="#e6e6e6"
+          strokeWidth="6"
+          fill="transparent"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="#5971e7"
+          strokeWidth="6"
+          fill="transparent"
+          strokeDasharray={strokeDasharray}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          className="transition-all duration-500 ease-in-out"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg font-bold text-[#1d1b20]">{value}</div>
+          <div className="text-xs text-[#757575]">/{total}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function CoursePage() {
   const params = useParams();
@@ -25,6 +74,7 @@ function CourseContent({
   courseId: string;
   semesterId: string;
 }) {
+  const router = useRouter();
   const [search, setSearch] = useState('');
 
   const { data, isLoading, error } = api.useQuery(
@@ -39,6 +89,24 @@ function CourseContent({
     },
   );
 
+  const { data: examData, isLoading: isExamLoading } = api.useQuery(
+    'get',
+    '/v1/exams/course/{courseId}',
+    {
+      params: {
+        path: {
+          courseId: courseId,
+        },
+      },
+    },
+    {
+      refetchInterval: 10 * 1000,
+      meta: {
+        isBackgroundTask: true,
+      },
+    },
+  );
+
   const lectures = useMemo(() => {
     if (!data || isLoading || !data.lectures) return [];
 
@@ -49,7 +117,15 @@ function CourseContent({
     );
   }, [data, isLoading, search]);
 
-  if (!data || isLoading || !data.lectures) {
+  const exams = useMemo(() => {
+    if (!examData || isExamLoading || !examData.exams) return [];
+
+    return examData.exams.filter((exam) =>
+      exam.title!.toLowerCase().includes(search.toLowerCase()),
+    );
+  }, [examData, isExamLoading]);
+
+  if (!data || isLoading || !data.lectures || isExamLoading) {
     return <div>Loading...</div>;
   }
 
@@ -71,13 +147,51 @@ function CourseContent({
         <section className="rounded-lg bg-[#F7F7F7] shadow">
           <header className="flex items-center justify-between border-b px-6 py-4">
             <h2 className="font-medium">모의 시험</h2>
-            <Plus className="cursor-pointer text-gray-600 hover:text-gray-800" />
+            <Plus
+              onClick={() => {
+                router.push(`/create/exam?courseId=${courseId}`);
+              }}
+              className="cursor-pointer text-gray-600 hover:text-gray-800"
+            />
           </header>
           <div className="flex justify-center p-8">
-            <button className="flex h-40 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed bg-gray-100 text-gray-400 hover:bg-gray-200">
-              <Plus size={32} />
-              <span className="mt-2">모의 시험 추가하기</span>
-            </button>
+            {exams.length > 0 ? (
+              exams.map((exam) => (
+                <Card
+                  className="cursor-pointer border-[#e6e6e6] transition-shadow hover:shadow-md"
+                  onClick={() => {
+                    router.push(
+                      `/${semesterId}/${courseId}/exam/solve/${exam.id}`,
+                    );
+                  }}
+                >
+                  <CardContent className="flex flex-col items-center p-6">
+                    <h3 className="mb-4 text-sm font-medium text-[#1d1b20]">
+                      {exam.title}
+                    </h3>
+                    <CircularProgress value={90} total={100} size={80} />
+                    <div className="mt-4 text-center">
+                      <Button className="w-full bg-[#5971e7] text-sm text-white hover:bg-[#4a5fd1]">
+                        상세 결과 보기
+                      </Button>
+                      <p className="mt-2 text-xs text-[#999999]">
+                        {new Date(exam.createdAt!).toLocaleString()}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <button
+                onClick={() => {
+                  router.push(`/create/exam?courseId=${courseId}`);
+                }}
+                className="flex h-40 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-gray-100 text-gray-400 hover:bg-gray-200"
+              >
+                <Plus size={32} />
+                <span className="mt-2">모의 시험 추가하기</span>
+              </button>
+            )}
           </div>
 
           {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -186,10 +300,7 @@ function CourseContent({
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-[#757575]">
-              <p>1일, 3일, 5일의 점수가 위에 3위입니다.</p>
-              <p>Tree & Map의 - 영역,</p>
-              <p>Graph의 - 영역에 대해 더 공부하세요.</p>
-              <p className="text-[#5971e7]">다른 사용자에 비해 -</p>
+              <p>아직 분석 데이터가 부족합니다</p>
             </div>
           </CardContent>
         </Card>
@@ -211,7 +322,7 @@ function CourseContent({
               </div>
               <div>
                 <p className="mb-1 text-sm text-[#757575]">이수 학점</p>
-                <p className="text-xl font-bold text-[#1d1b20]">3</p>
+                <p className="text-xl font-bold text-[#1d1b20]">12</p>
               </div>
             </div>
           </CardContent>

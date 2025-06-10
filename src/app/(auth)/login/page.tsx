@@ -1,6 +1,7 @@
 'use client';
 
 import { api } from '@/api/client';
+import { Button } from '@/component/ui/button';
 import { useAuthState } from '@/providers/authProvider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
@@ -97,9 +98,10 @@ export default function Login() {
         <hr className="flex-grow border-t border-gray-300" />
       </div>
 
-      <button
+      <Button
         onClick={onGoogleLogin}
         className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 p-3 transition hover:bg-gray-100"
+        disabled
       >
         <img
           src="https://www.svgrepo.com/show/475656/google-color.svg"
@@ -109,7 +111,7 @@ export default function Login() {
         <span className="text-sm font-medium text-gray-700">
           Google 계정으로 로그인
         </span>
-      </button>
+      </Button>
 
       <p className="mt-6 text-center text-sm text-gray-600">
         계정이 없으신가요?{' '}
@@ -117,6 +119,15 @@ export default function Login() {
           회원가입
         </Link>
       </p>
+
+      <div className="mt-4 text-center text-xs text-gray-500">
+        <Link
+          href="/api/privacy-policy.html"
+          className="text-indigo-600 hover:underline"
+        >
+          개인정보처리방침
+        </Link>
+      </div>
     </>
   );
 }

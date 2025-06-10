@@ -52,7 +52,17 @@ function LectureCreateModalContent({ courseId }: { courseId: string }) {
   const createLecture = api.useMutation('post', '/v1/lectures', {
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['get', '/v1/lectures/course/{courseId}'],
+        queryKey: [
+          'get',
+          '/v1/lectures/course/{courseId}',
+          {
+            params: {
+              path: {
+                courseId: courseId,
+              },
+            },
+          },
+        ],
       });
     },
   });
@@ -82,7 +92,7 @@ function LectureCreateModalContent({ courseId }: { courseId: string }) {
   };
 
   return (
-    <ModalWrapper>
+    <ModalWrapper size="md">
       <DialogTitle as="h3" className="text-lg leading-6 font-semibold">
         과목 추가하기
       </DialogTitle>
