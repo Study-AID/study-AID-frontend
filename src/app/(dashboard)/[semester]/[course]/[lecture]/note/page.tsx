@@ -430,6 +430,9 @@ function NoteComponent({
           exact: true,
         });
       },
+      meta: {
+        isBackgroundTask: true,
+      },
     },
   );
 
@@ -545,15 +548,27 @@ function NoteComponent({
   const updateTooltipPosition = () => {
     const sel = window.getSelection();
 
-    if (!sel || sel.isCollapsed) return;
+    if (!sel || sel.isCollapsed) {
+      setToolbarPos(null);
+      return;
+    }
 
     const text = sel.toString().trim();
 
-    if (!text) return;
+    if (!text) {
+      setToolbarPos(null);
+      return;
+    }
 
     const range = sel.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
+    const rects = range.getClientRects();
 
+    if (!rects.length) {
+      setToolbarPos(null);
+      return;
+    }
+
+    const firstRect = rects[0];
     const container =
       summaryRef.current &&
       summaryRef.current.contains(range.commonAncestorContainer)
@@ -563,8 +578,10 @@ function NoteComponent({
     if (!container) return;
 
     const containerRect = (container as HTMLElement).getBoundingClientRect();
-    const top = rect.top - containerRect.top;
-    const left = rect.left - containerRect.left + rect.width / 2;
+    const TOOLTIP_HEIGHT = 40;
+    const MARGIN = 8;
+    const top = firstRect.top - containerRect.top - TOOLTIP_HEIGHT - MARGIN;
+    const left = firstRect.left - containerRect.left + firstRect.width / 2;
     setToolbarPos({ top, left });
   };
 
@@ -795,21 +812,21 @@ function NoteComponent({
           />
         )}
 
-        {toolbarPos && !isSelectionInSummary(window.getSelection()!) && (
+        {toolbarPos && (
           <div
             className="pointer-events-none absolute z-10"
             style={{
-              top: toolbarPos.top - 8,
-              left: toolbarPos.left,
+              top: `${toolbarPos.top}px`,
+              left: `${toolbarPos.left}px`,
               transform: 'translateX(-50%)',
             }}
           >
-            <div className="flex w-fit items-center gap-x-2 rounded-md bg-black/75 p-2 text-white shadow-lg">
-              <button className="pointer-events-auto flex items-center gap-1">
+            <div className="pointer-events-auto flex w-fit items-center gap-x-2 rounded-md bg-black/75 p-2 text-white shadow-lg">
+              <button className="flex items-center gap-1">
                 <Globe size={16} />
                 <span>번역하기</span>
               </button>
-              <button className="pointer-events-auto flex items-center gap-1">
+              <button className="flex items-center gap-1">
                 <MessageCircle size={16} />
                 <span>질문하기</span>
               </button>
