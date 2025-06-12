@@ -1,0 +1,17 @@
+FROM mcr.microsoft.com/devcontainers/javascript-node:20
+
+WORKDIR /workspaces
+
+ENV PNPM_HOME=/workspaces/pnpm
+RUN corepack enable pnpm
+
+RUN apt-get update \
+  && apt-get install -y openssh-server \
+  && mkdir -p /var/run/sshd
+
+  RUN echo 'root:devcontainer' | chpasswd \
+  && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
+  && sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
+
+  EXPOSE 22
+  CMD ["/usr/sbin/sshd", "-D"]

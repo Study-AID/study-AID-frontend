@@ -1,8 +1,8 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  output: "standalone",
+  output: 'standalone',
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -12,7 +12,16 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  transpilePackages: ["@ap-solution/database"],
+  watchOptions: {
+    pollIntervalMs: 1000,
+  },
+  webpack: (config) => {
+    config.resolve.alias.canvas = false;
+
+    return config;
+  },
+  // Disable ISR status in development mode
+  devIndicators: false,
 };
 
 export default nextConfig;
