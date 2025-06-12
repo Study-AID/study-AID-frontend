@@ -31,9 +31,6 @@ function ExamResultComponent({ examId }: { examId: string }) {
   const { data, isLoading, error } = api.useQuery('get', '/v1/exams/{id}', {
     params: {
       path: { id: examId },
-      query: {
-        examId: examId,
-      },
     },
   });
 

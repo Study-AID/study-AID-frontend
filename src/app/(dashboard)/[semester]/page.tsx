@@ -125,7 +125,7 @@ export default function SemesterPage() {
       </section>
 
       {/* 우측 사이드바 */}
-      <div className="w-80 space-y-6 border-l border-[#e6e6e6] bg-white px-6">
+      <div className="hidden w-80 space-y-6 border-l border-[#e6e6e6] bg-white px-6">
         {/* 학기 진행률 */}
         <Card className="border-[#e6e6e6]">
           <CardHeader className="pb-4">

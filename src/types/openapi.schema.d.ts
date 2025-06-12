@@ -128,6 +128,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/lectures/{id}/note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update lecture note
+         * @description Updates the note of a lecture
+         */
+        put: operations["updateLectureNote"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/lectures/{id}/display-order-lex": {
         parameters: {
             query?: never;
@@ -224,6 +244,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/courses/{courseId}/assessments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a specific course assessment by ID
+         * @description Retrieves a specific course assessment by its ID
+         */
+        get: operations["getCourseAssessmentById"];
+        /**
+         * Update a course assessment
+         * @description Updates an existing course assessment
+         */
+        put: operations["updateCourseAssessment"];
+        post?: never;
+        /**
+         * Delete a course assessment
+         * @description Deletes a specific course assessment by its ID
+         */
+        delete: operations["deleteCourseAssessment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/semesters": {
         parameters: {
             query?: never;
@@ -242,6 +290,26 @@ export interface paths {
          * @description Creates a new semester
          */
         post: operations["createSemester"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a new report
+         * @description Create a new report for a quiz item or exam item.
+         */
+        post: operations["createReport"];
         delete?: never;
         options?: never;
         head?: never;
@@ -282,6 +350,26 @@ export interface paths {
          * @description Submit a solution for a specific quiz by its ID.
          */
         post: operations["submitQuiz"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/quizzes/{id}/items/{quizItemId}/toggle-like": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle like for quiz item
+         * @description Toggle like status for a specific quiz item. If already liked, removes the like. If not liked, adds a like.
+         */
+        post: operations["toggleLikeQuizItem"];
         delete?: never;
         options?: never;
         head?: never;
@@ -409,6 +497,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/exams/{id}/items/{examItemId}/toggle-like": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle like for exam item
+         * @description Toggle like status for a specific exam item. If already liked, removes the like. If not liked, adds a like.
+         */
+        post: operations["toggleLikeExamItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/courses": {
         parameters: {
             query?: never;
@@ -423,6 +531,30 @@ export interface paths {
          * @description Creates a new course
          */
         post: operations["createCourse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/courses/{courseId}/assessments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all course assessments for a specific course
+         * @description Retrieves a list of all course assessments for a specific course
+         */
+        get: operations["getCourseAssessmentsByCourse"];
+        put?: never;
+        /**
+         * Create a new course assessment
+         * @description Creates a new course assessment
+         */
+        post: operations["createCourseAssessment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -549,6 +681,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/reports/my-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get my reports
+         * @description Retrieve all reports created by the authenticated user.
+         */
+        get: operations["getMyReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/quizzes/{id}/result": {
         parameters: {
             query?: never;
@@ -581,6 +733,26 @@ export interface paths {
          * @description Retrieve quizzes associated with a specific lecture ID.
          */
         get: operations["getQuizzesByLecture"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/quizzes/lecture/{lectureId}/items/liked": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get liked quiz items by lecture ID
+         * @description Retrieve all liked quiz items associated with a specific lecture ID.
+         */
+        get: operations["getLikedQuizItemsByLecture"];
         put?: never;
         post?: never;
         delete?: never;
@@ -745,6 +917,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/exams/course/{courseId}/items/liked": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get liked exam items by course ID
+         * @description Retrieve a list of liked exam items associated with a specific course ID.
+         */
+        get: operations["getLikedExamItemsByCourseId"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/courses/{id}/weakness-analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get course weakness analysis
+         * @description Retrieve weakness analysis for a specific course based on quiz and exam results
+         */
+        get: operations["getCourseWeaknessAnalysis"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/courses/semester/{semesterId}": {
         parameters: {
             query?: never;
@@ -780,6 +992,26 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/{reportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a report
+         * @description Delete a specific report. Only the creator of the report can delete it.
+         */
+        delete: operations["deleteReport"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1116,6 +1348,11 @@ export interface components {
             /** @description Sub-topics under this topic */
             subTopics?: components["schemas"]["TopicDetails"][];
         };
+        /** @description Lecture note update request */
+        UpdateLectureNoteRequest: {
+            /** @description Updated lecture note content */
+            note: string;
+        };
         /** @description Lecture update request */
         UpdateLectureDisplayOrderLexRequest: {
             /** @description Updated lecture display order lex */
@@ -1138,12 +1375,19 @@ export interface components {
             earnedGrade?: number;
             /** Format: int32 */
             completedCredits?: number;
+            courseWeaknessAnalysis?: components["schemas"]["CourseWeaknessAnalysis"];
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
             /** Format: date-time */
             deletedAt?: string;
+        };
+        CourseWeaknessAnalysis: {
+            weaknesses?: string;
+            suggestions?: string;
+            /** Format: date-time */
+            analyzed_at?: string;
         };
         Exam: {
             /** Format: uuid */
@@ -1358,6 +1602,61 @@ export interface components {
              */
             completedCredits?: number;
         };
+        /** @description Course assessment update request */
+        UpdateCourseAssessmentRequest: {
+            /** @description Title of the course assessment */
+            title: string;
+            /**
+             * Format: float
+             * @description Score achieved
+             */
+            score: number;
+            /**
+             * Format: float
+             * @description Maximum possible score
+             */
+            maxScore: number;
+        };
+        /** @description Course assessment response DTO */
+        CourseAssessmentResponse: {
+            /**
+             * Format: uuid
+             * @description Unique ID of the course assessment
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Unique ID of the course
+             */
+            courseId: string;
+            /**
+             * Format: uuid
+             * @description Unique ID of the user
+             */
+            userId: string;
+            /** @description Title of the course assessment */
+            title?: string;
+            /**
+             * Format: float
+             * @description Score achieved
+             */
+            score: number;
+            /**
+             * Format: float
+             * @description Maximum possible score
+             */
+            maxScore: number;
+            /**
+             * Format: date-time
+             * @description Creation timestamp of the course assessment
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Last update timestamp of the course assessment
+             */
+            updatedAt: string;
+        };
         /** @description Create semester request */
         CreateSemesterRequest: {
             /**
@@ -1376,6 +1675,38 @@ export interface components {
              * @example SPRING
              */
             season?: string;
+        };
+        CreateReportRequest: {
+            itemType?: string;
+            /** Format: uuid */
+            quizId?: string;
+            /** Format: uuid */
+            quizItemId?: string;
+            /** Format: uuid */
+            examId?: string;
+            /** Format: uuid */
+            examItemId?: string;
+            reportReason?: string;
+        };
+        ReportResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            userId?: string;
+            itemType?: string;
+            /** Format: uuid */
+            quizId?: string;
+            /** Format: uuid */
+            quizItemId?: string;
+            /** Format: uuid */
+            examId?: string;
+            /** Format: uuid */
+            examItemId?: string;
+            reportReason?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
         };
         /** @description quiz creation request */
         CreateQuizRequest: {
@@ -1582,6 +1913,53 @@ export interface components {
              */
             updatedAt?: string;
         };
+        /** @description Exam item response DTO */
+        ExamItemResponse: {
+            /**
+             * Format: uuid
+             * @description Exam item ID
+             */
+            id: string;
+            /** @description Question text */
+            question: string;
+            /**
+             * @description Question type
+             * @enum {string}
+             */
+            questionType: "true_or_false" | "multiple_choice" | "short_answer" | "essay" | "custom";
+            /** @description Explanation */
+            explanation: string;
+            /** @description True/False answer for true_or_false type */
+            isTrueAnswer?: boolean;
+            /** @description Multiple choice options */
+            choices?: string[];
+            /** @description Correct answer indices for multiple choice */
+            answerIndices?: number[];
+            /** @description Text answer for short_answer/essay type */
+            textAnswer?: string;
+            /**
+             * Format: int32
+             * @description Display order
+             */
+            displayOrder?: number;
+            /**
+             * Format: float
+             * @description Points
+             */
+            points?: number;
+            /** @description Is liked */
+            isLiked?: boolean;
+            /**
+             * Format: date-time
+             * @description Creation time
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Last update time
+             */
+            updatedAt: string;
+        };
         /** @description Course creation request */
         CreateCourseRequest: {
             /**
@@ -1591,6 +1969,21 @@ export interface components {
             semesterId: string;
             /** @description Name of the course */
             name: string;
+        };
+        /** @description Course assessment creation request */
+        CreateCourseAssessmentRequest: {
+            /** @description Title of the course assessment */
+            title: string;
+            /**
+             * Format: float
+             * @description Score achieved
+             */
+            score: number;
+            /**
+             * Format: float
+             * @description Maximum possible score
+             */
+            maxScore: number;
         };
         EmailSignupRequest: {
             email?: string;
@@ -1615,6 +2008,9 @@ export interface components {
         SemesterListResponse: {
             /** @description List of semesters */
             semesters?: components["schemas"]["SemesterResponse"][];
+        };
+        ReportListResponse: {
+            reports?: components["schemas"]["ReportResponse"][];
         };
         EssayCriteriaAnalysis: {
             criteria?: components["schemas"]["ScoringCriterion"][];
@@ -1708,6 +2104,11 @@ export interface components {
         QuizListResponse: {
             /** @description List of quizzes response */
             quizzes?: components["schemas"]["QuizResponse"][];
+        };
+        /** @description List of quizz items response */
+        QuizItemListResponse: {
+            /** @description List of quiz items */
+            quizItems?: components["schemas"]["QuizItemResponse"][];
         };
         /** @description List of quiz results response */
         QuizResultListResponse: {
@@ -1814,6 +2215,16 @@ export interface components {
         ExamResultListResponse: {
             /** @description List of exam results response */
             examResults?: components["schemas"]["ExamResultResponse"][];
+        };
+        /** @description List of exam items response */
+        ExamItemListResponse: {
+            /** @description List of exam items */
+            examItems?: components["schemas"]["ExamItemResponse"][];
+        };
+        /** @description List of course assessments response */
+        CourseAssessmentListResponse: {
+            /** @description List of course assessments */
+            courseAssessments?: components["schemas"]["CourseAssessmentResponse"][];
         };
         /** @description List of courses response */
         CourseListResponse: {
@@ -2416,6 +2827,70 @@ export interface operations {
             };
         };
     };
+    updateLectureNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the lecture to update */
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Updated lecture note */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLectureNoteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successfully updated lecture note */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description Invalid input data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description User does not have access to this lecture */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description Lecture not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LectureResponse"];
+                };
+            };
+        };
+    };
     updateLectureDisplayOrderLex: {
         parameters: {
             query?: never;
@@ -2838,6 +3313,168 @@ export interface operations {
             };
         };
     };
+    getCourseAssessmentById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the course */
+                courseId: string;
+                /** @description ID of the course assessment to retrieve */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved course assessment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
+                };
+            };
+            /** @description User does not have access to this course assessment */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
+                };
+            };
+            /** @description Course assessment not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
+                };
+            };
+        };
+    };
+    updateCourseAssessment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the course */
+                courseId: string;
+                /** @description ID of the course assessment to update */
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Updated course assessment details */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCourseAssessmentRequest"];
+            };
+        };
+        responses: {
+            /** @description Course assessment updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
+                };
+            };
+            /** @description Invalid input data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
+                };
+            };
+            /** @description User does not have access to this course assessment */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
+                };
+            };
+            /** @description Course assessment not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
+                };
+            };
+        };
+    };
+    deleteCourseAssessment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the course */
+                courseId: string;
+                /** @description ID of the course assessment to delete */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Course assessment deleted successfully */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description User does not have access to this course assessment */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Course assessment not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getSemesters: {
         parameters: {
             query?: never;
@@ -2906,6 +3543,58 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SemesterResponse"];
+                };
+            };
+        };
+    };
+    createReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Report creation request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Report created successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReportResponse"];
+                };
+            };
+            /** @description Invalid input data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReportResponse"];
+                };
+            };
+            /** @description Quiz or Exam not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReportResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReportResponse"];
                 };
             };
         };
@@ -3013,6 +3702,67 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SubmitQuizListResponse"];
+                };
+            };
+        };
+    };
+    toggleLikeQuizItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Quiz ID */
+                id: string;
+                /** @description Quiz Item ID */
+                quizItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Like status toggled successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizItemResponse"];
+                };
+            };
+            /** @description Invalid request parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizItemResponse"];
+                };
+            };
+            /** @description User does not have access to this quiz */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizItemResponse"];
+                };
+            };
+            /** @description Quiz or Quiz Item not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizItemResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizItemResponse"];
                 };
             };
         };
@@ -3354,6 +4104,58 @@ export interface operations {
             };
         };
     };
+    toggleLikeExamItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the exam */
+                id: string;
+                /** @description ID of the exam item to toggle like for */
+                examItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Like toggled successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamItemResponse"];
+                };
+            };
+            /** @description User does not have access to this exam */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamItemResponse"];
+                };
+            };
+            /** @description Exam or exam item not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamItemResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamItemResponse"];
+                };
+            };
+        };
+    };
     createCourse: {
         parameters: {
             query?: never;
@@ -3402,6 +4204,120 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CourseResponse"];
+                };
+            };
+        };
+    };
+    getCourseAssessmentsByCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the course */
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved course assessments */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentListResponse"];
+                };
+            };
+            /** @description User does not have access to this course */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentListResponse"];
+                };
+            };
+            /** @description Course not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentListResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentListResponse"];
+                };
+            };
+        };
+    };
+    createCourseAssessment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the course */
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        /** @description Course assessment details */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCourseAssessmentRequest"];
+            };
+        };
+        responses: {
+            /** @description Course assessment created successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
+                };
+            };
+            /** @description Invalid input data */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
+                };
+            };
+            /** @description User does not have access to this course */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
+                };
+            };
+            /** @description Course not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseAssessmentResponse"];
                 };
             };
         };
@@ -3638,6 +4554,35 @@ export interface operations {
             };
         };
     };
+    getMyReports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reports retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReportListResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReportListResponse"];
+                };
+            };
+        };
+    };
     getQuizResultById: {
         parameters: {
             query?: never;
@@ -3743,6 +4688,56 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["QuizListResponse"];
+                };
+            };
+        };
+    };
+    getLikedQuizItemsByLecture: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Lecture ID */
+                lectureId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Liked quiz items retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizItemListResponse"];
+                };
+            };
+            /** @description User does not have access to this quiz */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizItemListResponse"];
+                };
+            };
+            /** @description No liked quiz items found for this lecture */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizItemListResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizItemListResponse"];
                 };
             };
         };
@@ -4098,6 +5093,106 @@ export interface operations {
             };
         };
     };
+    getLikedExamItemsByCourseId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the course to retrieve liked exam items for */
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Liked exam items found */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamItemListResponse"];
+                };
+            };
+            /** @description User does not have access to this course */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamItemListResponse"];
+                };
+            };
+            /** @description Course not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamItemListResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExamItemListResponse"];
+                };
+            };
+        };
+    };
+    getCourseWeaknessAnalysis: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the course to get weakness analysis for */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved weakness analysis */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseWeaknessAnalysis"];
+                };
+            };
+            /** @description User does not have access to this course */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseWeaknessAnalysis"];
+                };
+            };
+            /** @description Course not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseWeaknessAnalysis"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourseWeaknessAnalysis"];
+                };
+            };
+        };
+    };
     getCoursesBySemester: {
         parameters: {
             query?: never;
@@ -4183,6 +5278,48 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                 };
+            };
+        };
+    };
+    deleteReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the report to delete */
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Report deleted successfully */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description User does not have permission to delete this report */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Report not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

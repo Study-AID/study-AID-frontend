@@ -46,7 +46,6 @@ export function UserPlaceholder() {
         sideOffset={4}
         alignOffset={0}
       >
-        <DropdownMenuItem>프로필</DropdownMenuItem>
         <DropdownMenuItem>
           {/* api/privacy-policy.html */}
           <Link href="/api/privacy-policy.html">개인정보처리 방침</Link>

@@ -14,8 +14,12 @@ const tabs = [
     prefix: 'quiz',
   },
   {
-    label: 'QnA 기록',
+    label: 'QnA 좋아요 기록',
     prefix: 'qnaHistory',
+  },
+  {
+    label: '노트 메모',
+    prefix: 'memo',
   },
 ];
 

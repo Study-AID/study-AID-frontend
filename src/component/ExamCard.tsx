@@ -13,16 +13,14 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 
-export function QuizCard({
+export function ExamCard({
   semesterId,
   courseId,
-  lectureId,
-  quiz,
+  exam,
 }: {
   semesterId: string;
   courseId: string;
-  lectureId: string;
-  quiz: components['schemas']['QuizResponse'];
+  exam: components['schemas']['ExamResponse'];
 }) {
   const router = useRouter();
 
@@ -77,7 +75,7 @@ export function QuizCard({
           statusText: '부분 채점',
           statusBg: 'bg-orange-100',
           statusTextColor: 'text-orange-800',
-          disabled: false,
+          disabled: true,
         };
       case 'graded':
         return {
@@ -104,20 +102,16 @@ export function QuizCard({
     }
   };
 
-  const statusConfig = getStatusConfig(quiz.status);
+  const statusConfig = getStatusConfig(exam.status!);
 
   const handleClick = () => {
     if (statusConfig.disabled) return;
 
     // 상태에 따라 다른 페이지로 이동
-    if (quiz.status === 'graded' || quiz.status === 'partially_graded') {
-      router.push(
-        `/${semesterId}/${courseId}/${lectureId}/quiz/result/${quiz.id}`,
-      );
+    if (exam.status === 'graded' || exam.status === 'partially_graded') {
+      router.push(`/${semesterId}/${courseId}/exam/result/${exam.id}`);
     } else {
-      router.push(
-        `/${semesterId}/${courseId}/${lectureId}/quiz/solve/${quiz.id}`,
-      );
+      router.push(`/${semesterId}/${courseId}/exam/solve/${exam.id}`);
     }
   };
 
@@ -145,7 +139,7 @@ export function QuizCard({
         <span
           className={`text-center text-lg font-semibold ${statusConfig.textColor}`}
         >
-          {quiz.title}
+          {exam.title}
         </span>
 
         {/* 추가 정보 표시 */}
@@ -157,7 +151,7 @@ export function QuizCard({
           </div>
         )} */}
 
-        {quiz.status === 'generate_in_progress' && (
+        {exam.status === 'generate_in_progress' && (
           <div className="mt-2 text-center">
             <span className="text-xs text-blue-600">
               문제를 생성하고 있습니다
@@ -170,17 +164,17 @@ export function QuizCard({
       <div
         className={`flex h-12 items-center justify-center text-sm font-medium ${statusConfig.statusBg} ${statusConfig.statusTextColor}`}
       >
-        {quiz.status === 'not_started' && '퀴즈 시작하기'}
-        {quiz.status === 'generate_in_progress' && '생성 중...'}
-        {quiz.status === 'submitted' && '결과 대기 중'}
-        {quiz.status === 'partially_graded' && '결과 확인하기'}
-        {quiz.status === 'graded' && '결과 보기'}
+        {exam.status === 'not_started' && '시험 시작하기'}
+        {exam.status === 'generate_in_progress' && '생성 중...'}
+        {exam.status === 'submitted' && '결과 대기 중'}
+        {exam.status === 'partially_graded' && '결과 확인하기'}
+        {exam.status === 'graded' && '결과 보기'}
       </div>
     </div>
   );
 }
 
-export function AddQuizCard({ onClick }: { onClick: () => void }) {
+export function AddExamCard({ onClick }: { onClick: () => void }) {
   return (
     <div
       onClick={onClick}
@@ -191,7 +185,7 @@ export function AddQuizCard({ onClick }: { onClick: () => void }) {
       </div>
 
       <div className="bg-opacity-30 flex h-12 items-center justify-center bg-black/30 text-sm font-medium">
-        새 퀴즈 추가
+        새 시험 추가
       </div>
     </div>
   );

@@ -7,6 +7,9 @@ import clsx from 'clsx';
 import {
   ChevronLeft,
   ChevronRight,
+  Edit,
+  Eye,
+  FileText,
   Globe,
   Heart,
   MessageCircle,
@@ -14,6 +17,7 @@ import {
   MessageSquare,
   Minus,
   Plus,
+  Save,
   Send,
   X,
 } from 'lucide-react';
@@ -36,6 +40,83 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 const observerConfig = {
   threshold: 0,
+};
+
+// 마크다운 렌더링 (간단한 버전)
+const renderMarkdown = (text: string) => {
+  return text.split('\n').map((line, index) => {
+    // 헤딩 처리
+    if (line.startsWith('### ')) {
+      return (
+        <h3
+          key={index}
+          className="mt-4 mb-2 text-lg font-semibold text-gray-800"
+        >
+          {line.slice(4)}
+        </h3>
+      );
+    }
+    if (line.startsWith('## ')) {
+      return (
+        <h2 key={index} className="mt-6 mb-3 text-xl font-bold text-gray-900">
+          {line.slice(3)}
+        </h2>
+      );
+    }
+    if (line.startsWith('# ')) {
+      return (
+        <h1 key={index} className="mt-8 mb-4 text-2xl font-bold text-gray-900">
+          {line.slice(2)}
+        </h1>
+      );
+    }
+
+    // 리스트 처리
+    if (line.startsWith('- ')) {
+      return (
+        <li
+          key={index}
+          className="mb-1 ml-4 list-inside list-disc text-gray-700"
+        >
+          {line.slice(2)}
+        </li>
+      );
+    }
+    if (line.startsWith('* ')) {
+      return (
+        <li
+          key={index}
+          className="mb-1 ml-4 list-inside list-disc text-gray-700"
+        >
+          {line.slice(2)}
+        </li>
+      );
+    }
+
+    // 볼드 처리
+    if (line.includes('**')) {
+      const parts = line.split('**');
+      return (
+        <p key={index} className="mb-2 text-gray-700">
+          {parts.map((part, i) =>
+            i % 2 === 1 ? <strong key={i}>{part}</strong> : part,
+          )}
+        </p>
+      );
+    }
+
+    // 빈 줄 처리
+    if (line.trim() === '') {
+      return <br key={index} />;
+    }
+
+    // 일반 텍스트
+    return (
+      <p key={index} className="mb-2 text-gray-700">
+        {line}
+      </p>
+    );
+  });
 };
 
 export default function NotePage() {
@@ -506,29 +587,6 @@ function NoteComponent({
       setIsChatOpen(true);
     }
   }, [chat, isLoading, error]);
-
-  // 요약본 상태 polling 10 seconds
-  useEffect(() => {
-    const invalidate = setInterval(() => {
-      if (lecture.summaryStatus !== 'completed') {
-        utils.invalidateQueries({
-          queryKey: [
-            'get',
-            '/v1/lectures/{id}',
-            {
-              params: {
-                path: {
-                  id: lecture.id,
-                },
-              },
-            },
-          ],
-        });
-      }
-    }, 10000);
-
-    return () => clearInterval(invalidate);
-  }, [lecture.summaryStatus]);
 
   // 컨테이너 너비 감지
   useEffect(() => {
@@ -1056,19 +1114,13 @@ function NoteComponent({
       <ResizeHandle onResize={handleResize} />
 
       {/* 강의 요약 영역 */}
+
       <div
         ref={summaryRef}
         style={{ width: `${100 - leftPanelWidth}%` }}
-        className="relative flex flex-col overflow-y-auto rounded-2xl bg-gray-50 p-4 shadow-inner"
+        className="relative flex flex-col overflow-y-auto rounded-2xl bg-gray-50 shadow-inner"
       >
-        {lecture.summaryStatus !== 'completed' ? (
-          <SummaryPending />
-        ) : (
-          <LectureSummaryView
-            summary={lecture.summary!}
-            lectureId={lecture.id}
-          />
-        )}
+        <AdvancedMarkdownEditor lectureId={lecture.id} note={lecture.note} />
       </div>
 
       {toolbarPos && selectionText && (
@@ -1276,152 +1328,455 @@ function PageWithObserver({
   );
 }
 
-export function SummaryPending() {
-  return (
-    <div className="relative flex h-full basis-1/3 rounded-lg border bg-white p-4 shadow-md">
-      <div className="absolute top-1/2 left-1/2 z-[1] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
-        <svg
-          className="ml-2 h-24 w-24 animate-spin text-[#5971E7]"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 100-16 8 8 0 000 16z"
-          />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
-        </svg>
-        <br />
-        <div className="text-lg font-semibold whitespace-nowrap text-gray-700">
-          올려주신 강의 자료를 요약하고 있어요!
-        </div>
-        <br />
-
-        <div className="text-sm font-semibold text-gray-700">
-          완료되면 메일로 알려드릴게요.
-        </div>
-      </div>
-
-      <div className="h-full w-full space-y-2 overflow-hidden">
-        <div className="h-4 w-4/5 animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-2/5 animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-full animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-3/5 animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-4/5 animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-full animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-3/5 animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-3/5 animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-4/5 animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4" />
-        <div className="h-4" />
-        <div className="h-4 w-4/5 animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-4/5 animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-full animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-3/5 animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-3/5 animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4" />
-        <div className="h-4" />
-        <div className="h-4 w-full animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-3/5 animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-2/5 animate-pulse rounded-full bg-neutral-500/30" />
-        <div className="h-4 w-4/5 animate-pulse rounded-full bg-neutral-500/30" />
-      </div>
-    </div>
-  );
-}
-
-export function LectureSummaryView({
-  summary,
+function MarkdownNoteEditor({
   lectureId,
+  note,
 }: {
-  summary: components['schemas']['Summary'];
   lectureId: string;
+  note: components['schemas']['LectureResponse']['note'];
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [content, setContent] = useState(
+    '# 강의 필기\n\n## 주요 내용\n\n- \n\n## 핵심 키워드\n\n- \n\n## 질문/궁금한 점\n\n- \n\n## 추가 메모\n\n- ',
+  );
+  const [savedContent, setSavedContent] = useState(content);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const utils = useQueryClient();
+
+  const saveNoteMutation = api.useMutation('put', '/v1/lectures/{id}/note', {
+    onSuccess: () => {
+      setSavedContent(content);
+      setIsEditing(false);
+    },
+    onError: (error) => {
+      console.error('노트 저장 실패:', error);
+    },
+  });
+
+  // 노트 데이터가 있으면 content 업데이트
+  useEffect(() => {
+    if (note?.content) {
+      setContent(note.content);
+      setSavedContent(note.content);
+    }
+  }, [note]);
+
+  const handleSave = useCallback(() => {
+    saveNoteMutation.mutate({
+      params: {
+        path: {
+          id: lectureId,
+        },
+      },
+      body: {
+        note: content,
+      },
+    });
+  }, [content, lectureId]);
+
+  const handleCancel = useCallback(() => {
+    setContent(savedContent);
+    setIsEditing(false);
+  }, [savedContent]);
+
+  const adjustTextareaHeight = useCallback(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isEditing) {
+      adjustTextareaHeight();
+    }
+  }, [content, isEditing, adjustTextareaHeight]);
+
   return (
-    <div className="mx-auto h-full w-full max-w-4xl space-y-12 overflow-scroll px-4 py-8">
-      <section>
-        <h2 className="mb-2 text-2xl font-bold">📘 강의 개요</h2>
-        <p className="whitespace-pre-wrap text-gray-700">{summary.overview}</p>
-      </section>
+    <div className="mx-auto h-full w-full max-w-4xl overflow-hidden px-4 py-6">
+      {/* 헤더 */}
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
+          <FileText className="text-blue-600" size={28} />
+          강의 필기
+        </h2>
 
-      <section>
-        <h2 className="mb-4 text-2xl font-bold">📚 주요 주제</h2>
-        <ul className="space-y-8">
-          {summary.topics!.map((topic, idx) => (
-            <TopicBlock key={idx} topic={topic} level={0} />
-          ))}
-        </ul>
-      </section>
+        <div className="flex items-center gap-2">
+          {isEditing ? (
+            <>
+              <button
+                onClick={handleCancel}
+                className="rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saveNoteMutation.isPending}
+                className="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                <Save size={16} />
+                {saveNoteMutation.isPending ? '저장 중...' : '저장'}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              <Edit size={16} />
+              편집
+            </button>
+          )}
+        </div>
+      </div>
 
-      <section>
-        <h2 className="mb-4 text-2xl font-bold">🔑 핵심 키워드</h2>
-        <ul className="space-y-2">
-          {summary.keywords!.map((kw, idx) => (
-            <li key={idx} className="rounded border bg-gray-50 p-4">
-              <h3 className="font-semibold">{kw.keyword}</h3>
-              {kw.pageRange && (
-                <p className="text-sm text-gray-600">
-                  📄 p.{kw.pageRange.startPage}~{kw.pageRange.endPage} | 관련도:{' '}
-                  {kw.relevance}
-                </p>
-              )}
-              <p className="mt-1">{kw.description}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/* 에디터/뷰어 영역 */}
+      <div className="h-full overflow-hidden rounded-lg border bg-white shadow-sm">
+        {isEditing ? (
+          // 편집 모드
+          <div className="h-[90%] p-4">
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => {
+                setContent(e.target.value);
+                adjustTextareaHeight();
+              }}
+              placeholder="마크다운으로 필기를 작성하세요...
 
-      <section>
-        <h2 className="mb-2 text-2xl font-bold">📖 참고 자료</h2>
-        {summary.additionalReferences && (
-          <ul className="list-inside list-disc">
-            {summary.additionalReferences.map((ref, i) => (
-              <li key={i}>{ref}</li>
-            ))}
-          </ul>
+# 제목
+## 소제목
+### 작은 제목
+
+- 리스트 항목
+- 또 다른 항목
+
+**굵은 글씨**
+
+일반 텍스트..."
+              className="h-full w-full resize-none border-none p-0 font-mono text-sm leading-relaxed focus:outline-none"
+              style={{ minHeight: '500px' }}
+            />
+          </div>
+        ) : (
+          // 뷰어 모드
+          <div className="h-full overflow-y-auto p-6">
+            {content.trim() ? (
+              <div className="prose max-w-none">{renderMarkdown(content)}</div>
+            ) : (
+              <div className="flex h-full items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <FileText size={48} className="mx-auto mb-4 text-gray-300" />
+                  <p className="mb-2">아직 필기가 없습니다</p>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    첫 번째 필기를 작성해보세요
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
-      </section>
+      </div>
+
+      {/* 마크다운 도움말 (편집 모드일 때만 표시) */}
+      {isEditing && (
+        <div className="mt-4 rounded-lg bg-gray-50 p-4">
+          <h3 className="mb-2 text-sm font-semibold text-gray-700">
+            마크다운 문법 도움말
+          </h3>
+          <div className="grid grid-cols-2 gap-4 text-xs text-gray-600">
+            <div>
+              <p>
+                <code># 제목</code> - 큰 제목
+              </p>
+              <p>
+                <code>## 소제목</code> - 중간 제목
+              </p>
+              <p>
+                <code>### 작은제목</code> - 작은 제목
+              </p>
+            </div>
+            <div>
+              <p>
+                <code>- 항목</code> - 리스트
+              </p>
+              <p>
+                <code>**굵게**</code> - 굵은 글씨
+              </p>
+              <p>
+                <code>빈 줄</code> - 문단 구분
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function TopicBlock({
-  topic,
-  level,
+function AdvancedMarkdownEditor({
+  lectureId,
+  note,
 }: {
-  topic: components['schemas']['TopicDetails'];
-  level: number;
+  lectureId: string;
+  note: components['schemas']['LectureResponse']['note'];
 }) {
-  return (
-    <li className="border-l-4 border-blue-400 pl-4">
-      <h3
-        className={`mb-1 text-xl font-semibold ${level > 0 ? 'text-blue-600' : ''}`}
-      >
-        {topic.title}
-      </h3>
-      {topic.pageRange && (
-        <p className="mb-1 text-sm text-gray-600">
-          📄 p.{topic.pageRange.startPage}~{topic.pageRange.endPage}
-        </p>
-      )}
-      <p className="mb-2 whitespace-pre-wrap">{topic.description}</p>
-      {topic.additionalDetails?.map((detail, idx) => (
-        <p key={idx} className="mb-1 text-sm text-gray-700">
-          • {detail}
-        </p>
-      ))}
+  const [content, setContent] = useState(
+    '# 강의 필기\n\n## 주요 내용\n\n- \n\n## 핵심 키워드\n\n- \n\n## 질문/궁금한 점\n\n- \n\n## 추가 메모\n\n- ',
+  );
+  const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>(
+    'edit',
+  );
+  const [savedContent, setSavedContent] = useState(content);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-      {topic.subTopics && (
-        <ul className="mt-4 ml-4 space-y-4">
-          {topic.subTopics.map((sub, i) => (
-            <TopicBlock key={i} topic={sub} level={level + 1} />
-          ))}
-        </ul>
+  // Mock useQueryClient
+  const useQueryClient = () => ({
+    invalidateQueries: () => {},
+  });
+  const utils = useQueryClient();
+
+  // 노트 저장 뮤테이션
+  const saveNoteMutation = api.useMutation('put', '/v1/lectures/{id}/note', {
+    onSuccess: () => {
+      setSavedContent(content);
+      setIsSaving(false);
+    },
+    onError: (error) => {
+      console.error('노트 저장 실패:', error);
+      setIsSaving(false);
+    },
+  });
+
+  // 노트 데이터가 있으면 content 업데이트
+  useEffect(() => {
+    if (note?.content) {
+      setContent(note.content);
+      setSavedContent(note.content);
+    }
+  }, [note]);
+
+  // 저장 핸들러
+  const handleSave = useCallback(() => {
+    setIsSaving(true);
+    saveNoteMutation.mutate({
+      params: {
+        path: {
+          id: lectureId,
+        },
+      },
+      body: {
+        note: content,
+      },
+    });
+  }, [content, lectureId, saveNoteMutation]);
+
+  // 취소 핸들러
+  const handleCancel = useCallback(() => {
+    setContent(savedContent);
+    setViewMode('edit');
+  }, [savedContent]);
+
+  // 텍스트 영역 자동 크기 조정
+  const adjustTextareaHeight = useCallback(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, []);
+
+  // 에디터와 프리뷰 스크롤 동기화
+  const syncScroll = useCallback(() => {
+    if (viewMode !== 'split' || !textareaRef.current || !previewRef.current)
+      return;
+
+    const textareaElement = textareaRef.current;
+    const previewElement = previewRef.current;
+
+    const textareaScrollPercentage =
+      textareaElement.scrollTop /
+      (textareaElement.scrollHeight - textareaElement.clientHeight);
+
+    previewElement.scrollTop =
+      textareaScrollPercentage *
+      (previewElement.scrollHeight - previewElement.clientHeight);
+  }, [viewMode]);
+
+  // 텍스트 변경 핸들러
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setContent(e.target.value);
+      adjustTextareaHeight();
+    },
+    [adjustTextareaHeight],
+  );
+
+  // 텍스트 영역 스크롤 핸들러
+  const handleTextareaScroll = useCallback(() => {
+    syncScroll();
+  }, [syncScroll]);
+
+  // 초기 렌더링 시 텍스트 영역 높이 조정
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [viewMode, adjustTextareaHeight]);
+
+  // 키보드 단축키 처리
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+S 또는 Cmd+S로 저장
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+
+      // Esc로 취소
+      if (e.key === 'Escape') {
+        handleCancel();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSave, handleCancel]);
+
+  return (
+    <div className="flex h-full flex-col">
+      {/* 툴바 */}
+      <div className="flex flex-wrap items-center justify-between gap-y-2 border-b bg-white p-3">
+        <h2 className="flex items-center gap-2 font-semibold text-gray-900">
+          <FileText size={20} />
+          강의 필기
+        </h2>
+
+        <div className="flex items-center gap-2">
+          {/* 뷰 모드 선택 */}
+          <div className="flex rounded-md border">
+            <button
+              onClick={() => setViewMode('edit')}
+              className={`flex cursor-pointer items-center px-3 py-1 text-sm ${
+                viewMode === 'edit'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+              title="편집 모드"
+            >
+              <Edit size={14} className="mr-1" />
+              <span className="hidden sm:inline">편집</span>
+            </button>
+            <button
+              onClick={() => setViewMode('split')}
+              className={`flex cursor-pointer items-center px-3 py-1 text-sm ${
+                viewMode === 'split'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+              title="분할 모드"
+            >
+              <Plus size={14} className="mr-1" />
+              <span className="hidden sm:inline">분할</span>
+            </button>
+            <button
+              onClick={() => setViewMode('preview')}
+              className={`flex cursor-pointer items-center px-3 py-1 text-sm ${
+                viewMode === 'preview'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+              title="미리보기 모드"
+            >
+              <Eye size={14} className="mr-1" />
+              <span className="hidden sm:inline">미리보기</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCancel}
+              className="flex cursor-pointer items-center gap-1 rounded-md px-3 py-1 text-sm text-gray-600 hover:bg-gray-100"
+              disabled={content === savedContent}
+            >
+              취소
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving || content === savedContent}
+              className="flex cursor-pointer items-center gap-1 rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              <Save size={14} />
+              {isSaving ? '저장 중...' : '저장'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 에디터 영역 */}
+      <div className="flex flex-1 overflow-hidden">
+        {(viewMode === 'edit' || viewMode === 'split') && (
+          <div
+            className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} ${viewMode === 'split' ? 'border-r' : ''}`}
+          >
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={handleTextChange}
+              onScroll={handleTextareaScroll}
+              placeholder="마크다운으로 필기를 작성하세요..."
+              className="h-full w-full resize-none border-none p-4 font-mono text-sm leading-relaxed focus:outline-none"
+            />
+          </div>
+        )}
+
+        {(viewMode === 'preview' || viewMode === 'split') && (
+          <div
+            ref={previewRef}
+            className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} overflow-y-auto bg-white p-4`}
+          >
+            <div className="prose max-w-none">{renderMarkdown(content)}</div>
+          </div>
+        )}
+      </div>
+
+      {/* 마크다운 도움말 (편집 모드일 때만 표시) */}
+      {viewMode === 'edit' && (
+        <div className="mt-auto border-t bg-gray-50 p-3">
+          <details className="text-sm">
+            <summary className="cursor-pointer font-medium text-gray-700 hover:text-blue-600">
+              마크다운 문법 도움말
+            </summary>
+            <div className="mt-2 grid grid-cols-2 gap-4 text-xs text-gray-600">
+              <div>
+                <p>
+                  <code># 제목</code> - 큰 제목
+                </p>
+                <p>
+                  <code>## 소제목</code> - 중간 제목
+                </p>
+                <p>
+                  <code>### 작은제목</code> - 작은 제목
+                </p>
+              </div>
+              <div>
+                <p>
+                  <code>- 항목</code> - 리스트
+                </p>
+                <p>
+                  <code>**굵게**</code> - 굵은 글씨
+                </p>
+                <p>
+                  <code>빈 줄</code> - 문단 구분
+                </p>
+              </div>
+            </div>
+          </details>
+        </div>
       )}
-    </li>
+    </div>
   );
 }

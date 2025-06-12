@@ -158,13 +158,13 @@ function LectureCreateModalContent({ courseId }: { courseId: string }) {
               clear();
               router.back();
             }}
-            className="rounded border px-4 py-2"
+            className="cursor-pointer rounded border px-4 py-2"
           >
             취소
           </button>
           <button
             type="submit"
-            className="rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-50"
+            className="cursor-pointer rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-50"
             disabled={createLecture.isPending}
           >
             {createLecture.isPending ? '업로드 중...' : '저장'}

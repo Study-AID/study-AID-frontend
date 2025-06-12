@@ -108,9 +108,7 @@ function NewLectureAccordion({ onClick }: { onClick: () => void }) {
         <p className="mb-2 text-[#757575]">
           업로드할 강의 자료 파일을 선택하거나 드래그 앤 드롭을 하세요.
         </p>
-        <p className="text-sm text-[#999999]">
-          지원되는 파일 형식: PDF, PPTX, TXT, Markdown, MP3
-        </p>
+        <p className="text-sm text-[#999999]">지원되는 파일 형식: PDF</p>
       </CardContent>
     </Card>
     // <div
