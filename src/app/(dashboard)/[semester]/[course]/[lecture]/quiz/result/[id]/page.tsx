@@ -29,7 +29,17 @@ function QuizResultComponent({ quizId }: { quizId: string }) {
     Record<string, boolean>
   >({});
 
-  const { data, isLoading, error } = api.useQuery('get', '/v1/quizzes/{id}', {
+  const { data, isLoading, error } = api.useQuery(
+    'get',
+    '/v1/quizzes/{id}/result',
+    {
+      params: {
+        path: { id: quizId },
+      },
+    },
+  );
+
+  const { data: quiz } = api.useQuery('get', '/v1/quizzes/{id}', {
     params: {
       path: { id: quizId },
     },
@@ -46,7 +56,7 @@ function QuizResultComponent({ quizId }: { quizId: string }) {
     );
   }
 
-  if (error || !data) {
+  if (error || !data || !quiz) {
     return (
       <div className="flex min-h-screen flex-1 items-center justify-center">
         <div className="text-center">
@@ -57,10 +67,10 @@ function QuizResultComponent({ quizId }: { quizId: string }) {
     );
   }
 
-  const quizData = data as components['schemas']['QuizResponse'];
-  const quizItems = quizData.quizItems || [];
+  const quizData = data as components['schemas']['QuizResultResponse'];
+  const quizItems = quizData.quizResultElements || [];
 
-  const correctCount = Math.floor(quizItems.length * 0.7);
+  const correctCount = quizItems.filter((item) => item.isCorrect).length;
   const totalCount = quizItems.length;
   const correctPercentage =
     totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
@@ -167,11 +177,10 @@ function QuizResultComponent({ quizId }: { quizId: string }) {
   };
 
   const renderQuestionChoices = (
-    question: components['schemas']['QuizItemResponse'],
+    question: components['schemas']['QuizResultElement'],
     index: number,
   ) => {
     // 실제 구현에서는 API에서 받아온 사용자 답변을 사용
-    const isQuestionCorrect = index < correctCount;
 
     switch (question.questionType) {
       case 'true_or_false':
@@ -179,10 +188,7 @@ function QuizResultComponent({ quizId }: { quizId: string }) {
           <div className="mt-4 space-y-2">
             {[true, false].map((choice, index) => {
               const isCorrectChoice = question.isTrueAnswer === choice;
-              // 임시 구현: 정답인 경우 사용자가 선택한 것으로 표시
-              const isUserChoice = isQuestionCorrect
-                ? isCorrectChoice
-                : !isCorrectChoice;
+              const isUserChoice = question.selectedBool === choice;
 
               return (
                 <div
@@ -227,10 +233,8 @@ function QuizResultComponent({ quizId }: { quizId: string }) {
             {question.choices?.map((choice, choiceIndex) => {
               const isCorrectChoice =
                 question.answerIndices?.includes(choiceIndex);
-              // 임시 구현: 정답인 경우 사용자가 선택한 것으로 표시
-              const isUserChoice = isQuestionCorrect
-                ? isCorrectChoice
-                : !isCorrectChoice && Math.random() > 0.7; // 오답인 경우 30% 확률로 선택한 것으로 표시
+              const isUserChoice =
+                question.selectedIndices?.includes(choiceIndex);
 
               return (
                 <div
@@ -279,15 +283,15 @@ function QuizResultComponent({ quizId }: { quizId: string }) {
                 {question.textAnswer || '정답이 설정되지 않았습니다.'}
               </p>
             </div>
-            {isQuestionCorrect ? (
+            {question.isCorrect ? (
               <div className="rounded-lg border border-green-200 bg-green-50 p-3">
                 <p className="mb-2 text-sm text-green-600">내 답안:</p>
-                <p className="text-green-800">{question.textAnswer}</p>
+                <p className="text-green-800">{question.textAnswerOfUser}</p>
               </div>
             ) : (
               <div className="rounded-lg border border-red-200 bg-red-50 p-3">
                 <p className="mb-2 text-sm text-red-600">내 답안:</p>
-                <p className="text-red-800">{'잘못된 답변 (예시)'}</p>
+                <p className="text-red-800">{question.textAnswerOfUser}</p>
               </div>
             )}
           </div>
@@ -305,10 +309,10 @@ function QuizResultComponent({ quizId }: { quizId: string }) {
           {/* Header */}
           <div className="mb-8 text-center">
             <h2 className="text-2xl font-bold text-[#1d1b20]">
-              {quizData.title} 결과
+              {quiz.title} 결과
             </h2>
             <p className="mt-2 text-[#757575]">
-              완료 시간: {new Date(quizData.updatedAt).toLocaleString('ko-KR')}
+              완료 시간: {new Date(quizData.updatedAt!).toLocaleString('ko-KR')}
             </p>
           </div>
 
@@ -318,8 +322,8 @@ function QuizResultComponent({ quizId }: { quizId: string }) {
               <div className="rounded-xl border border-[#e6e6e6] bg-white p-6 shadow-sm">
                 <div className="flex flex-col items-center">
                   <CircularProgress
-                    value={correctCount}
-                    total={totalCount}
+                    value={quizData.score || 0}
+                    total={quizData.maxScore || 0}
                     size={200}
                   />
                   <div className="mt-6 text-center">
@@ -349,7 +353,7 @@ function QuizResultComponent({ quizId }: { quizId: string }) {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-[#e6e6e6] bg-white p-6 shadow-sm">
+              {/* <div className="rounded-xl border border-[#e6e6e6] bg-white p-6 shadow-sm">
                 <h3 className="mb-4 text-lg font-semibold">학습 제안</h3>
                 <div className="space-y-3 text-sm">
                   <p>틀린 문제를 다시 복습해보세요.</p>
@@ -365,72 +369,84 @@ function QuizResultComponent({ quizId }: { quizId: string }) {
                     </p>
                   )}
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Right Side - Question Review */}
             <div className="space-y-6 lg:col-span-2">
-              {quizItems
-                .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
-                .map((question, index) => {
-                  const isQuestionCorrect = index < correctCount;
-                  const isExpanded = expandedQuestions[question.id] || false;
+              {quizItems.map((question, index) => {
+                const isExpanded =
+                  expandedQuestions[question.quizItemId!] || false;
 
-                  return (
-                    <div
-                      key={question.id}
-                      className={`rounded-xl border-2 p-6 shadow-sm ${
-                        isQuestionCorrect
-                          ? 'border-green-500 bg-green-50'
-                          : 'border-red-500 bg-red-50'
-                      }`}
-                    >
-                      <div className="mb-4 flex items-start gap-3">
-                        <span
-                          className={`font-bold ${isQuestionCorrect ? 'text-green-600' : 'text-red-600'}`}
-                        >
-                          Q{index + 1}.
-                        </span>
-                        <div className="flex-1">
-                          <div className="mb-2 flex items-start justify-between">
-                            <p className="flex-1 pr-4 font-medium text-gray-800">
-                              {question.question}
-                            </p>
-                            <span className="rounded bg-gray-100 px-2 py-1 text-sm whitespace-nowrap text-gray-500">
-                              {question.points}점
-                            </span>
-                          </div>
+                return (
+                  <div
+                    key={question.quizItemId}
+                    className={`rounded-xl border-2 p-6 shadow-sm ${
+                      question.isCorrect
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-red-500 bg-red-50'
+                    }`}
+                  >
+                    <div className="mb-4 flex items-start gap-3">
+                      <span
+                        className={`font-bold ${question.isCorrect ? 'text-green-600' : 'text-red-600'}`}
+                      >
+                        Q{index + 1}.
+                      </span>
+                      <div className="flex-1">
+                        <div className="mb-2 flex items-start justify-between">
+                          <p className="flex-1 pr-4 font-medium text-gray-800">
+                            {question.question}
+                          </p>
+                          <span className="rounded bg-gray-100 px-2 py-1 text-sm whitespace-nowrap text-gray-500">
+                            {question.questionType === 'short_answer' ||
+                            question.questionType === 'essay'
+                              ? question.score
+                              : question.isCorrect
+                                ? question.points
+                                : 0}
+                            /{question.points}점
+                          </span>
+                        </div>
 
-                          {/* 문제 유형별 선택지 표시 */}
-                          {renderQuestionChoices(question, index)}
+                        {/* 문제 유형별 선택지 표시 */}
+                        {renderQuestionChoices(question, index)}
 
-                          {/* 설명 (토글 가능) */}
-                          <div className="mt-4">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleQuestion(question.id)}
-                              className="text-sm text-gray-600"
-                            >
-                              {isExpanded ? '설명 접기' : '설명 보기'}
-                              {isExpanded ? (
-                                <ChevronUp className="ml-1 h-4 w-4" />
-                              ) : (
-                                <ChevronDown className="ml-1 h-4 w-4" />
-                              )}
-                            </Button>
+                        {/* 설명 (토글 가능) */}
+                        <div className="mt-4">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleQuestion(question.quizItemId!)}
+                            className="text-sm text-gray-600"
+                          >
+                            {isExpanded ? '설명 접기' : '설명 보기'}
+                            {isExpanded ? (
+                              <ChevronUp className="ml-1 h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="ml-1 h-4 w-4" />
+                            )}
+                          </Button>
 
-                            {isExpanded && (
+                          {isExpanded && (
+                            <div className="mt-2 rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-700">
+                              {question.explanation}
+                            </div>
+                          )}
+
+                          {/* 분석 */}
+                          {isExpanded &&
+                            question.essayCriteriaAnalysis?.analysis && (
                               <div className="mt-2 rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-700">
-                                {question.explanation}
+                                {question.essayCriteriaAnalysis?.analysis}
                               </div>
                             )}
-                          </div>
                         </div>
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                );
+              })}
 
               {/* 액션 버튼 */}
               <div className="mt-8 flex justify-center gap-4">

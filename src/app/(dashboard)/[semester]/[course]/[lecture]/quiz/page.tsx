@@ -60,7 +60,7 @@ function QuizComponent({
   }
 
   return (
-    <div className="mt-4 grid grid-cols-6 gap-3 border border-[#B8B8B8] bg-[#F7F7F7] p-6">
+    <div className="mt-4 flex gap-3 overflow-x-auto border border-[#B8B8B8] bg-[#F7F7F7] p-6">
       {data.quizzes?.map((quiz: components['schemas']['QuizResponse']) => (
         <QuizCard
           key={quiz.id}

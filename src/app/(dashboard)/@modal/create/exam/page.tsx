@@ -6,6 +6,7 @@ import { Checkbox } from '@/component/ui/checkbox';
 import { Input } from '@/component/ui/input';
 import { DialogTitle } from '@headlessui/react';
 import { useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import {
   ArrowRight,
   BookOpen,
@@ -147,49 +148,81 @@ function CreateExamModalContent({ courseId }: { courseId: string }) {
 
               {/* Lecture List */}
               <div className="h-full space-y-3 overflow-y-auto">
-                {lectures.lectures.map((lecture) => (
-                  <div
-                    key={lecture.id}
-                    className={`cursor-pointer rounded-lg border-2 p-4 transition-all hover:shadow-sm ${
-                      selectedLectures.includes(lecture.id)
-                        ? 'border-[#5971e7] bg-[#f0f2ff]'
-                        : 'border-[#e6e6e6] hover:border-[#5971e7]'
-                    }`}
-                    onClick={() => {
-                      setSelectedLectures((prev) =>
-                        prev.includes(lecture.id)
-                          ? prev.filter((id) => id !== lecture.id)
-                          : [...prev, lecture.id],
-                      );
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          checked={selectedLectures.includes(lecture.id)}
-                          className="data-[state=checked]:border-[#5971e7] data-[state=checked]:bg-[#5971e7]"
-                        />
-                        <div className="flex-1">
-                          <h4 className="font-medium text-[#1d1b20]">
-                            {lecture.title}
-                          </h4>
-                          <p className="text-sm text-[#757575]">
-                            {lecture.createdAt}
-                          </p>
+                {lectures.lectures.map((lecture) => {
+                  const isCompleted = lecture.summaryStatus === 'completed';
+                  const isSelected = selectedLectures.includes(lecture.id);
+
+                  return (
+                    <div
+                      key={lecture.id}
+                      className={`rounded-lg border-2 p-4 transition-all ${
+                        isCompleted
+                          ? `cursor-pointer hover:shadow-sm ${
+                              isSelected
+                                ? 'border-[#5971e7] bg-[#f0f2ff]'
+                                : 'border-[#e6e6e6] hover:border-[#5971e7]'
+                            }`
+                          : 'cursor-not-allowed border-[#e6e6e6] bg-[#f5f5f5] opacity-60'
+                      }`}
+                      onClick={() => {
+                        if (isCompleted) {
+                          setSelectedLectures((prev) =>
+                            prev.includes(lecture.id)
+                              ? prev.filter((id) => id !== lecture.id)
+                              : [...prev, lecture.id],
+                          );
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            checked={isSelected}
+                            disabled={!isCompleted}
+                            className={`${isCompleted ? 'data-[state=checked]:border-[#5971e7] data-[state=checked]:bg-[#5971e7]' : 'cursor-not-allowed opacity-50'}`}
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h4
+                                className={`font-medium ${isCompleted ? 'text-[#1d1b20]' : 'text-[#9e9e9e]'}`}
+                              >
+                                {lecture.title}
+                              </h4>
+                              {!isCompleted && (
+                                <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
+                                  {lecture.summaryStatus === 'not_started' &&
+                                    '대기중'}
+                                  {lecture.summaryStatus === 'in_progress' &&
+                                    '처리중'}
+                                </span>
+                              )}
+                            </div>
+                            <p
+                              className={`text-sm ${isCompleted ? 'text-[#757575]' : 'text-[#9e9e9e]'}`}
+                            >
+                              {format(lecture.createdAt, 'yyyy-MM-dd')}
+                            </p>
+                            {!isCompleted && (
+                              <p className="mt-1 text-xs text-[#9e9e9e]">
+                                요약 완료 후 선택 가능합니다
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`${isCompleted ? 'text-[#757575] hover:text-[#5971e7]' : 'cursor-not-allowed text-[#9e9e9e]'}`}
+                            disabled={!isCompleted}
+                          >
+                            <BookOpen className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-[#757575] hover:text-[#5971e7]"
-                        >
-                          <BookOpen className="h-4 w-4" />
-                        </Button>
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Select All */}
@@ -522,7 +555,11 @@ function CreateExamModalContent({ courseId }: { courseId: string }) {
 
         {/* Action Buttons */}
         <div className="mt-8 flex justify-between">
-          <Button variant="outline" className="px-6">
+          <Button
+            variant="outline"
+            className="px-6"
+            onClick={() => router.back()}
+          >
             <ChevronLeft className="mr-2 h-4 w-4" />
             이전 단계
           </Button>

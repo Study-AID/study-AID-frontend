@@ -64,6 +64,7 @@ function LectureCreateModalContent({ courseId }: { courseId: string }) {
           },
         ],
       });
+      setFile(null);
     },
   });
 

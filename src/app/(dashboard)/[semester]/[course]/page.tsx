@@ -1145,7 +1145,7 @@ function CourseContent({
               className="cursor-pointer text-gray-600 hover:text-gray-800"
             />
           </header>
-          <div className="flex justify-center p-8">
+          <div className="flex justify-center gap-x-3 p-8">
             {exams.length > 0 ? (
               exams.map((exam, i) => (
                 <ExamCard
