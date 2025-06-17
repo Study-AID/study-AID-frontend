@@ -34,6 +34,12 @@ function ExamResultComponent({ examId }: { examId: string }) {
     },
   });
 
+  // const { data: exams } = api.useQuery('get', '/v1/exams/{id}', {
+  //   params: {
+  //     path: { id: examId },
+  //   },
+  // });
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-1 items-center justify-center">
@@ -166,7 +172,7 @@ function ExamResultComponent({ examId }: { examId: string }) {
   };
 
   const renderQuestionChoices = (
-    question: components['schemas']['ExamItem'],
+    question: components['schemas']['ExamItemResponse'],
   ) => {
     const userAnswer =
       question.questionType === 'true_or_false'

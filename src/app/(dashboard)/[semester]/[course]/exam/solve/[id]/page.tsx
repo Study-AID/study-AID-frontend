@@ -11,11 +11,18 @@ export default function ExamSolvePage() {
   const params = useParams();
 
   const examId = params.id as string;
+  const courseId = params.course as string;
 
-  return <ExamSolveComponent examId={examId} />;
+  return <ExamSolveComponent examId={examId} courseId={courseId} />;
 }
 
-export function ExamSolveComponent({ examId }: { examId: string }) {
+export function ExamSolveComponent({
+  examId,
+  courseId,
+}: {
+  examId: string;
+  courseId: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialIndex = Number(searchParams.get('p') ?? '1');
@@ -54,19 +61,39 @@ export function ExamSolveComponent({ examId }: { examId: string }) {
       },
       {
         onSuccess: () => {
-          utils.invalidateQueries({
-            queryKey: [
+          // utils.invalidateQueries({
+          //   queryKey: [
+          //     'get',
+          //     '/v1/exams/course/{courseId}',
+          //     {
+          //       params: {
+          //         path: {
+          //           courseId: data?.courseId,
+          //         },
+          //       },
+          //     },
+          //   ],
+          // });
+
+          utils.setQueryData(
+            [
               'get',
               '/v1/exams/course/{courseId}',
-              {
-                params: {
-                  path: {
-                    courseId: data?.courseId,
-                  },
-                },
-              },
+              { params: { path: { id: examId } } },
             ],
-          });
+            (oldData: components['schemas']['ExamListResponse']) => {
+              if (!oldData || !oldData.exams) return oldData;
+              return {
+                exams: [
+                  ...oldData.exams!.filter((exam) => exam.id !== examId),
+                  {
+                    ...data,
+                    status: 'submitted',
+                  },
+                ],
+              };
+            },
+          );
 
           utils.invalidateQueries({
             queryKey: [

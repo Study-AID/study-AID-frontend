@@ -1363,75 +1363,52 @@ export interface components {
             /** @description Updated exam title */
             title: string;
         };
-        Course: {
-            /** Format: uuid */
-            id?: string;
-            semester?: components["schemas"]["Semester"];
-            user?: components["schemas"]["User"];
-            name?: string;
-            /** Format: float */
-            targetGrade?: number;
-            /** Format: float */
-            earnedGrade?: number;
-            /** Format: int32 */
-            completedCredits?: number;
-            courseWeaknessAnalysis?: components["schemas"]["CourseWeaknessAnalysis"];
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: date-time */
-            deletedAt?: string;
-        };
-        CourseWeaknessAnalysis: {
-            weaknesses?: string;
-            suggestions?: string;
-            /** Format: date-time */
-            analyzed_at?: string;
-        };
-        Exam: {
-            /** Format: uuid */
-            id?: string;
-            course?: components["schemas"]["Course"];
-            user?: components["schemas"]["User"];
-            title?: string;
-            /** @enum {string} */
-            status?: "generate_in_progress" | "not_started" | "submitted" | "partially_graded" | "graded";
-            referencedLectures?: string[];
-            /** Format: date-time */
-            contentsGenerateAt?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: date-time */
-            deletedAt?: string;
-        };
-        /** @description Exam item list */
-        ExamItem: {
-            /** Format: uuid */
-            id?: string;
-            exam?: components["schemas"]["Exam"];
-            user?: components["schemas"]["User"];
-            question?: string;
-            /** @enum {string} */
-            questionType?: "true_or_false" | "multiple_choice" | "short_answer" | "essay" | "custom";
-            explanation?: string;
+        /** @description Exam item response DTO */
+        ExamItemResponse: {
+            /**
+             * Format: uuid
+             * @description Exam item ID
+             */
+            id: string;
+            /** @description Question text */
+            question: string;
+            /**
+             * @description Question type
+             * @enum {string}
+             */
+            questionType: "true_or_false" | "multiple_choice" | "short_answer" | "essay" | "custom";
+            /** @description Explanation */
+            explanation: string;
+            /** @description True/False answer for true_or_false type */
             isTrueAnswer?: boolean;
+            /** @description Multiple choice options */
             choices?: string[];
+            /** @description Correct answer indices for multiple choice */
             answerIndices?: number[];
+            /** @description Text answer for short_answer/essay type */
             textAnswer?: string;
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Display order
+             */
             displayOrder?: number;
-            /** Format: float */
+            /**
+             * Format: float
+             * @description Points
+             */
             points?: number;
+            /** @description Is liked */
             isLiked?: boolean;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: date-time */
-            deletedAt?: string;
+            /**
+             * Format: date-time
+             * @description Creation time
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Last update time
+             */
+            updatedAt: string;
         };
         /** @description Exam response DTO */
         ExamResponse: {
@@ -1475,64 +1452,7 @@ export interface components {
              */
             updatedAt?: string;
             /** @description Exam item list */
-            examItems?: components["schemas"]["ExamItem"][];
-        };
-        School: {
-            /** Format: uuid */
-            id?: string;
-            name?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: date-time */
-            deletedAt?: string;
-        };
-        Semester: {
-            /** Format: uuid */
-            id?: string;
-            user?: components["schemas"]["User"];
-            name?: string;
-            /** Format: int32 */
-            year?: number;
-            /** @enum {string} */
-            season?: "spring" | "summer" | "fall" | "winter";
-            /** Format: date */
-            startDate?: string;
-            /** Format: date */
-            endDate?: string;
-            /** Format: float */
-            targetGrade?: number;
-            /** Format: float */
-            earnedGrade?: number;
-            /** Format: int32 */
-            completedCredits?: number;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: date-time */
-            deletedAt?: string;
-        };
-        User: {
-            /** Format: uuid */
-            id?: string;
-            school?: components["schemas"]["School"];
-            name?: string;
-            email?: string;
-            passwordHash?: string;
-            googleId?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: date-time */
-            deletedAt?: string;
-            /** Format: date-time */
-            lastLogin?: string;
-            isActive?: boolean;
-            /** @enum {string} */
-            authType?: "email" | "google";
+            examItems?: components["schemas"]["ExamItemResponse"][];
         };
         /** @description Course update request */
         UpdateCourseRequest: {
@@ -1913,53 +1833,6 @@ export interface components {
              */
             updatedAt?: string;
         };
-        /** @description Exam item response DTO */
-        ExamItemResponse: {
-            /**
-             * Format: uuid
-             * @description Exam item ID
-             */
-            id: string;
-            /** @description Question text */
-            question: string;
-            /**
-             * @description Question type
-             * @enum {string}
-             */
-            questionType: "true_or_false" | "multiple_choice" | "short_answer" | "essay" | "custom";
-            /** @description Explanation */
-            explanation: string;
-            /** @description True/False answer for true_or_false type */
-            isTrueAnswer?: boolean;
-            /** @description Multiple choice options */
-            choices?: string[];
-            /** @description Correct answer indices for multiple choice */
-            answerIndices?: number[];
-            /** @description Text answer for short_answer/essay type */
-            textAnswer?: string;
-            /**
-             * Format: int32
-             * @description Display order
-             */
-            displayOrder?: number;
-            /**
-             * Format: float
-             * @description Points
-             */
-            points?: number;
-            /** @description Is liked */
-            isLiked?: boolean;
-            /**
-             * Format: date-time
-             * @description Creation time
-             */
-            createdAt: string;
-            /**
-             * Format: date-time
-             * @description Last update time
-             */
-            updatedAt: string;
-        };
         /** @description Course creation request */
         CreateCourseRequest: {
             /**
@@ -2216,6 +2089,12 @@ export interface components {
         ExamItemListResponse: {
             /** @description List of exam items */
             examItems?: components["schemas"]["ExamItemResponse"][];
+        };
+        CourseWeaknessAnalysis: {
+            weaknesses?: string;
+            suggestions?: string;
+            /** Format: date-time */
+            analyzed_at?: string;
         };
         /** @description List of course assessments response */
         CourseAssessmentListResponse: {

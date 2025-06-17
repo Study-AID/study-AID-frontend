@@ -11,11 +11,18 @@ export default function QuizSolvePage() {
   const params = useParams();
 
   const quizId = params.id as string;
+  const lectureId = params.lecture as string;
 
-  return <QuizSolveComponent quizId={quizId} />;
+  return <QuizSolveComponent quizId={quizId} lectureId={lectureId} />;
 }
 
-export function QuizSolveComponent({ quizId }: { quizId: string }) {
+export function QuizSolveComponent({
+  quizId,
+  lectureId,
+}: {
+  quizId: string;
+  lectureId: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialIndex = Number(searchParams.get('p') ?? '1');
@@ -67,6 +74,26 @@ export function QuizSolveComponent({ quizId }: { quizId: string }) {
               },
             ],
           });
+
+          utils.setQueryData(
+            [
+              'get',
+              '/v1/quizzes/lecture/{lectureId}',
+              { params: { path: { lectureId: lectureId } } },
+            ],
+            (oldData: components['schemas']['QuizListResponse']) => {
+              if (!oldData || !oldData.quizzes) return oldData;
+              return {
+                quizzes: [
+                  ...oldData.quizzes!.filter((quiz) => quiz.id !== quizId),
+                  {
+                    ...data,
+                    status: 'submitted',
+                  },
+                ],
+              };
+            },
+          );
 
           utils.invalidateQueries({
             queryKey: [

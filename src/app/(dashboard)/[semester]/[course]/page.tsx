@@ -15,6 +15,7 @@ import { Input } from '@/component/ui/input';
 import { Label } from '@/component/ui/label';
 import { components } from '@/types/openapi.schema';
 import { useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import {
   ChevronDown,
   LayoutGrid,
@@ -1293,12 +1294,10 @@ function CourseContent({
                   )}
                   {feedbackData.suggestions && <br />}
                   {feedbackData.analyzed_at && (
-                    <p>
+                    <span className="text-xs text-[#999999]">
                       <strong>분석</strong>
-                    </p>
-                  )}
-                  {feedbackData.analyzed_at && (
-                    <p>{feedbackData.analyzed_at}</p>
+                      {format(feedbackData.analyzed_at, 'yyyy-MM-dd HH:mm:ss')}
+                    </span>
                   )}
                 </>
               ) : (
