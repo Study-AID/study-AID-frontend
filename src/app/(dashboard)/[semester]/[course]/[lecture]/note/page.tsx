@@ -29,6 +29,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { api } from '@/api/client';
+import { loadFontAsBase64 } from '@/lib/loadFont';
 import { useParams } from 'next/navigation';
 import { translate } from './translate';
 
@@ -1067,6 +1068,7 @@ function NoteComponent({
           <LectureSummaryView
             summary={lecture.summary!}
             lectureId={lecture.id}
+            title={lecture.title}
           />
         )}
       </div>
@@ -1337,12 +1339,117 @@ export function SummaryPending() {
 export function LectureSummaryView({
   summary,
   lectureId,
+  title,
 }: {
   summary: components['schemas']['Summary'];
   lectureId: string;
+  title: string;
 }) {
+  const handleDownloadPdf = async () => {
+    // 1) Dynamic-import pdfMake + 기본 vfs
+    const [{ default: pdfMake }, { default: pdfFonts }] = await Promise.all([
+      import('pdfmake/build/pdfmake'),
+      import('pdfmake/build/vfs_fonts'),
+    ]);
+
+    pdfMake.vfs = { ...pdfFonts.vfs };
+
+    // 2) 한글 폰트 Blob→DataURL→Base64
+    const [regB64, boldB64] = await Promise.all([
+      loadFontAsBase64('/fonts/NotoSansKR-Regular.ttf'),
+      loadFontAsBase64('/fonts/NotoSansKR-Bold.ttf'),
+    ]);
+    pdfMake.vfs['NotoSansKR-Regular.ttf'] = regB64;
+    pdfMake.vfs['NotoSansKR-Bold.ttf'] = boldB64;
+
+    // 3) 폰트 패밀리 정의(italics, bolditalics 필수)
+    pdfMake.fonts = {
+      ...pdfMake.fonts,
+      NotoSansKR: {
+        normal: 'NotoSansKR-Regular.ttf',
+        bold: 'NotoSansKR-Bold.ttf',
+        italics: 'NotoSansKR-Regular.ttf',
+        bolditalics: 'NotoSansKR-Bold.ttf',
+      },
+    };
+
+    // 4) 문서 정의
+    const docDefinition: any = {
+      pageSize: 'A4',
+      pageMargins: [40, 60, 40, 60],
+      defaultStyle: { fontSize: 12, font: 'NotoSansKR' },
+      styles: {
+        header: { fontSize: 18, bold: true, margin: [0, 10, 0, 5] },
+        subheader: { fontSize: 14, bold: true, margin: [0, 8, 0, 4] },
+      },
+      content: [
+        { text: '● 강의 개요', style: 'header' },
+        { text: summary.overview, margin: [0, 0, 0, 10] },
+        { text: '● 주요 주제', style: 'header' },
+        ...summary.topics!.map((topic) => ({
+          stack: [
+            { text: topic.title, style: 'subheader' },
+            {
+              text: `페이지: p.${topic.pageRange!.startPage}~${topic.pageRange!.endPage}`,
+              style: 'small',
+            },
+            { text: topic.description, margin: [0, 0, 0, 6] },
+            // 추가 세부사항
+            ...(topic.additionalDetails || []).map((d) => ({
+              text: `• ${d}`,
+              margin: [10, 0, 0, 4],
+            })),
+            // 하위 토픽
+            ...(topic.subTopics || []).flatMap((sub) => [
+              { text: sub.title, style: 'subheader', margin: [20, 6, 0, 2] },
+              {
+                text: `페이지: p.${sub.pageRange!.startPage}~${sub.pageRange!.endPage}`,
+                style: 'small',
+                margin: [20, 0, 0, 4],
+              },
+              { text: sub.description, margin: [20, 0, 0, 6] },
+              ...(sub.additionalDetails || []).map((d) => ({
+                text: `· ${d}`,
+                margin: [30, 0, 0, 4],
+              })),
+            ]),
+          ],
+          margin: [0, 0, 0, 12],
+        })),
+        { text: '● 핵심 키워드', style: 'header' },
+        ...summary.keywords!.map((kw) => ({
+          stack: [
+            { text: kw.keyword, style: 'subheader' },
+            {
+              text: `페이지: p.${kw.pageRange!.startPage}~${kw.pageRange!.endPage}  |  관련도: ${kw.relevance}`,
+              style: 'small',
+            },
+            { text: kw.description, margin: [0, 0, 0, 8] },
+          ],
+          margin: [0, 0, 0, 8],
+        })),
+        ...(summary.additionalReferences?.length
+          ? [
+              { text: '● 참고 자료', style: 'header', margin: [0, 10, 0, 4] },
+              { ul: summary.additionalReferences.map((r) => ({ text: r })) },
+            ]
+          : []),
+      ],
+    };
+
+    // 5) PDF 생성 및 다운로드
+    pdfMake.createPdf(docDefinition).download(`${title}.pdf`);
+  };
+
   return (
-    <div className="mx-auto h-full w-full max-w-4xl space-y-12 overflow-scroll px-4 py-8">
+    <div className="relative mx-auto h-full w-full max-w-4xl space-y-12 overflow-scroll px-4 py-8">
+      <button
+        onClick={handleDownloadPdf}
+        className="absolute top-4 right-4 z-10 cursor-pointer rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
+      >
+        PDF로 저장
+      </button>
+
       <section>
         <h2 className="mb-2 text-2xl font-bold">📘 강의 개요</h2>
         <p className="whitespace-pre-wrap text-gray-700">{summary.overview}</p>
