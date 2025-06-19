@@ -82,7 +82,10 @@ export function QuizSolveComponent({
               { params: { path: { lectureId: lectureId } } },
             ],
             (oldData: components['schemas']['QuizListResponse']) => {
+              console.log('oldData', oldData);
+              console.log('data', data);
               if (!oldData || !oldData.quizzes) return oldData;
+              console.log('pass');
               return {
                 quizzes: [
                   ...oldData.quizzes!.filter((quiz) => quiz.id !== quizId),
@@ -108,13 +111,14 @@ export function QuizSolveComponent({
               },
             ],
           });
+
+          router.back();
         },
         onError: (error) => {
           console.error('Quiz submission error:', error);
         },
       },
     );
-    router.back();
   };
 
   const question = data?.quizItems?.[problemIndex - 1];

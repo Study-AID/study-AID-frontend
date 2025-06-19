@@ -2,17 +2,28 @@
 
 import { api } from '@/api/client';
 import { Card, CardContent } from '@/component/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/component/ui/dialog';
+import { Input } from '@/component/ui/input';
+import { Label } from '@/component/ui/label';
 import { useLectureUpload } from '@/providers/uploadProvider';
 import { components } from '@/types/openapi.schema';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
   CirclePlus,
+  Edit2,
   FileText,
   LayoutGrid,
   List,
   Menu,
   MessageCircle,
   Plus,
+  Save,
   Search,
   Upload,
 } from 'lucide-react';
@@ -27,32 +38,138 @@ import {
 import { DropTargetMonitor, useDrop } from 'react-dnd';
 import { NativeTypes } from 'react-dnd-html5-backend';
 
+function EditLectureModal({
+  isOpen,
+  onClose,
+  lectureId,
+  currentTitle,
+  onSave,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  lectureId: string;
+  currentTitle: string;
+  onSave: (lectureId: string, newTitle: string) => void;
+}) {
+  const [title, setTitle] = useState(currentTitle);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitle(currentTitle);
+    }
+  }, [isOpen, currentTitle]);
+
+  const handleSave = async () => {
+    if (!title.trim()) return;
+
+    setIsSaving(true);
+    try {
+      await onSave(lectureId, title.trim());
+      onClose();
+    } catch (error) {
+      console.error('Failed to save:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setTitle(currentTitle);
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>강의 제목 수정</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div>
+            <Label htmlFor="lecture-title" className="text-sm font-medium">
+              강의 제목
+            </Label>
+            <Input
+              id="lecture-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="강의 제목을 입력하세요"
+              className="mt-1"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSave();
+                } else if (e.key === 'Escape') {
+                  handleCancel();
+                }
+              }}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={handleCancel}
+              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              disabled={isSaving}
+            >
+              취소
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving || !title.trim()}
+              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {isSaving ? '저장 중...' : '저장'}
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function LectureAccordion({
-  title,
+  lecture,
   subtitle,
   link,
-  moveLecture,
-  onDragEnd,
+  onEditTitle,
 }: {
-  title: string;
+  lecture: components['schemas']['LectureResponse'];
   subtitle?: string;
   link: string;
-  moveLecture: (from: number, to: number) => void;
-  onDragEnd: () => void;
+  onEditTitle: (lectureId: string, currentTitle: string) => void;
 }) {
   const router = useRouter();
+  const [isHovered, setIsHovered] = useState(false);
   return (
     <section
       className="my-3 h-16 cursor-pointer rounded-lg bg-white shadow"
       onClick={() => {
         router.push(link);
       }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <header className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-x-3">
           <List className="my-auto size-6" />
           <div className="text-left">
-            <h3 className="text-base font-medium text-gray-800">{title}</h3>
+            <h3 className="text-base font-medium text-gray-800">
+              {lecture.title}
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditTitle(lecture.id, lecture.title);
+                }}
+                className={`cursor-pointer p-1 text-gray-400 transition-opacity delay-200 hover:text-gray-600 ${
+                  isHovered ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                <Edit2 size={14} />
+              </button>
+            </h3>
             {subtitle && (
               <p className="mt-1 text-xs text-gray-500">{subtitle}</p>
             )}
@@ -123,18 +240,31 @@ function NewLectureAccordion({ onClick }: { onClick: () => void }) {
 export function LectureList({
   courseId,
   semesterId,
-  initialLectures,
+  lectures,
   search,
   setSearch,
 }: {
   courseId: string;
   semesterId: string;
-  initialLectures: components['schemas']['LectureResponse'][];
+  lectures: components['schemas']['LectureResponse'][];
   search: string;
   setSearch: Dispatch<SetStateAction<string>>;
 }) {
   const router = useRouter();
   const { setFile, file } = useLectureUpload();
+  const utils = useQueryClient();
+
+  const [editModal, setEditModal] = useState<{
+    isOpen: boolean;
+    lectureId: string;
+    currentTitle: string;
+  }>({
+    isOpen: false,
+    lectureId: '',
+    currentTitle: '',
+  });
+
+  const updateLecture = api.useMutation('put', '/v1/lectures/{id}');
 
   const handleFileDrop = useCallback(
     (item: { files: any[] }) => {
@@ -179,20 +309,6 @@ export function LectureList({
     }
   }, [file, router, courseId]);
 
-  const [lectures, setLectures] = useState(initialLectures);
-  useEffect(() => {
-    setLectures(initialLectures);
-  }, [initialLectures]);
-
-  const moveLecture = useCallback((from: number, to: number) => {
-    setLectures((prev) => {
-      const arr = [...prev];
-      const [moved] = arr.splice(from, 1);
-      arr.splice(to, 0, moved);
-      return arr;
-    });
-  }, []);
-
   const updateOrder = api.useMutation(
     'put',
     '/v1/lectures/{id}/display-order-lex',
@@ -202,20 +318,84 @@ export function LectureList({
       },
     },
   );
-  const onDragEnd = useCallback(() => {
-    const orderedIds = lectures.map((l) => l.id);
-    // updateOrder.mutate({
-
-    //   body: {
-    //     displayOrderLex:
-    //   }
-    // });
-  }, [lectures, courseId, updateOrder]);
 
   const isActive = canDrop && isOver;
 
+  const startEditLecture = (lectureId: string, currentTitle: string) => {
+    setEditModal({
+      isOpen: true,
+      lectureId,
+      currentTitle,
+    });
+  };
+
+  const closeEditModal = () => {
+    setEditModal({
+      isOpen: false,
+      lectureId: '',
+      currentTitle: '',
+    });
+  };
+
+  const onSaveLecture = (lectureId: string, newTitle: string) => {
+    if (newTitle === editModal.currentTitle) {
+      closeEditModal();
+      return;
+    }
+    // if title is empty, do not update
+    if (!newTitle.trim()) {
+      return;
+    }
+    updateLecture.mutate(
+      {
+        params: { path: { id: lectureId } },
+        body: { title: newTitle },
+      },
+      {
+        onSuccess: (data) => {
+          utils.setQueryData(
+            [
+              'get',
+              '/v1/lectures/course/{courseId}',
+              {
+                params: {
+                  path: {
+                    courseId: courseId,
+                  },
+                },
+              },
+            ],
+            (oldData: components['schemas']['LectureListResponse']) => {
+              if (!oldData || !oldData.lectures) {
+                return oldData;
+              }
+
+              const newData = {
+                lectures: oldData.lectures.map((l) => {
+                  if (l.id === lectureId) {
+                    return {
+                      ...l,
+                      title: newTitle,
+                    };
+                  }
+                  return l;
+                }) as components['schemas']['LectureResponse'][],
+              };
+
+              console.log('Updated lectures:', newData);
+
+              return newData;
+            },
+          );
+          closeEditModal();
+        },
+        onError: (error) => {},
+      },
+    );
+  };
+
   return (
-    <div ref={drop}>
+    <div className="relative" ref={drop}>
       <section className="rounded-lg bg-[#F7F7F7] shadow">
         <header className="flex items-center justify-between px-6 py-2">
           <h2 className="font-medium">강의 목록</h2>
@@ -242,8 +422,7 @@ export function LectureList({
           <LectureListInner
             lectures={lectures}
             semesterId={semesterId}
-            moveLecture={moveLecture}
-            onDragEnd={onDragEnd}
+            onEditTitle={startEditLecture}
           />
 
           <NewLectureAccordion onClick={handleOpen} />
@@ -255,6 +434,14 @@ export function LectureList({
           )}
         </div>
       </section>
+
+      <EditLectureModal
+        isOpen={editModal.isOpen}
+        onClose={closeEditModal}
+        lectureId={editModal.lectureId}
+        currentTitle={editModal.currentTitle}
+        onSave={onSaveLecture}
+      />
     </div>
   );
 }
@@ -262,23 +449,20 @@ export function LectureList({
 function LectureListInner({
   lectures,
   semesterId,
-  moveLecture,
-  onDragEnd,
+  onEditTitle,
 }: {
   lectures: components['schemas']['LectureResponse'][];
   semesterId: string;
-  moveLecture: (from: number, to: number) => void;
-  onDragEnd: () => void;
+  onEditTitle: (lectureId: string, currentTitle: string) => void;
 }) {
   return (
     <div className="">
       {lectures.map((lecture) => (
         <LectureAccordion
           key={lecture.id}
-          title={lecture.title}
+          lecture={lecture}
           subtitle={format(lecture.updatedAt, '마지막 학습 시간: yyyy.MM.dd')}
-          moveLecture={moveLecture}
-          onDragEnd={onDragEnd}
+          onEditTitle={onEditTitle}
           link={`/${semesterId}/${lecture.courseId}/${lecture.id}?tab=note`}
         />
       ))}

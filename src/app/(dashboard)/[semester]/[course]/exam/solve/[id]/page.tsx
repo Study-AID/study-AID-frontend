@@ -108,13 +108,13 @@ export function ExamSolveComponent({
               },
             ],
           });
+          router.back();
         },
         onError: (error) => {
           console.error('Exam submission error:', error);
         },
       },
     );
-    router.back();
   };
 
   const question = data?.examItems?.[problemIndex - 1];

@@ -2027,6 +2027,30 @@ export interface components {
             /** @description List of lectures response */
             lectures?: components["schemas"]["LectureResponse"][];
         };
+        /** @description Elements of the Exam Result(Exam Item, Exam Response) */
+        ExamResultElement: {
+            /** Format: uuid */
+            examItemId?: string;
+            question?: string;
+            /** @enum {string} */
+            questionType?: "true_or_false" | "multiple_choice" | "short_answer" | "essay" | "custom";
+            explanation?: string;
+            isTrueAnswer?: boolean;
+            choices?: string[];
+            answerIndices?: number[];
+            textAnswer?: string;
+            /** Format: float */
+            points?: number;
+            /** Format: uuid */
+            examResponseId?: string;
+            isCorrect?: boolean;
+            selectedBool?: boolean;
+            selectedIndices?: number[];
+            textAnswerOfUser?: string;
+            essayCriteriaAnalysis?: components["schemas"]["EssayCriteriaAnalysis"];
+            /** Format: float */
+            score?: number;
+        };
         /** @description Exam Result response DTO */
         ExamResultResponse: {
             /**
@@ -2074,6 +2098,8 @@ export interface components {
              * @description Last Update Time
              */
             updatedAt?: string;
+            /** @description Elements of the Exam Result(Exam Item, Exam Response) */
+            examResultElements?: components["schemas"]["ExamResultElement"][];
         };
         /** @description List of exams response */
         ExamListResponse: {

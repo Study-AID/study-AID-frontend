@@ -10,7 +10,7 @@ export default async function AuthLayout({ title, children }: AuthLayoutProps) {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* 왼쪽 서비스 설명 */}
-      <div className="hidden flex-col justify-center bg-indigo-600 p-8 text-white lg:flex lg:w-1/3">
+      <div className="hidden grow flex-col justify-center bg-indigo-600 p-8 text-white lg:flex">
         <div className="mx-auto max-w-md">
           <h2 className="mb-6 text-3xl font-bold">대학생을 위한 LMS</h2>
           <p className="mb-8 text-lg text-indigo-100">
@@ -99,7 +99,7 @@ export default async function AuthLayout({ title, children }: AuthLayoutProps) {
         </div>
       </div>
 
-      <div className="my-auto w-full max-w-md p-8 2xl:w-1/3">
+      <div className="my-auto w-full max-w-md p-8">
         <h1 className="mb-6 text-center text-3xl font-bold text-gray-800">
           Study AID
         </h1>
@@ -107,7 +107,7 @@ export default async function AuthLayout({ title, children }: AuthLayoutProps) {
         {children}
       </div>
 
-      <div className="hidden flex-col justify-center bg-gray-100 p-8 lg:flex lg:w-1/3">
+      <div className="hidden grow flex-col justify-center bg-gray-100 p-8 lg:flex">
         <div className="mx-auto max-w-md">
           <h2 className="mb-6 text-2xl font-bold text-gray-800">
             Study AID는 이렇게 작동해요

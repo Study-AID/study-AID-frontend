@@ -105,10 +105,10 @@ function CreateExamModalContent({ courseId }: { courseId: string }) {
               },
             ],
           });
+          router.back();
         },
       },
     );
-    router.back();
   };
 
   if (!lectures || !lectures.lectures) {

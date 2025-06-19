@@ -4,6 +4,15 @@ import { api } from '@/api/client';
 import { AddCourseCard, CourseCard } from '@/component/CourseCard';
 import { Button } from '@/component/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/component/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/component/ui/dialog';
+import { Input } from '@/component/ui/input';
+import { Label } from '@/component/ui/label';
+import { components } from '@/types/openapi.schema';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronDown,
@@ -12,9 +21,10 @@ import {
   Edit,
   Edit2,
   Plus,
+  Save,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function SemesterPage() {
   const router = useRouter();
@@ -23,8 +33,15 @@ export default function SemesterPage() {
   // get /v1/semesters/:semester
   const semester = params.semester as string;
 
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [draftDisplay, setDraftDisplay] = useState('');
+  const [editModal, setEditModal] = useState<{
+    isOpen: boolean;
+    courseId: string;
+    currentTitle: string;
+  }>({
+    isOpen: false,
+    courseId: '',
+    currentTitle: '',
+  });
 
   const { data, isLoading, error } = api.useQuery(
     'get',
@@ -38,26 +55,7 @@ export default function SemesterPage() {
     },
   );
 
-  const updateCourse = api.useMutation('put', '/v1/courses/{id}', {
-    onSuccess: (data) => {
-      utils.invalidateQueries({
-        queryKey: [
-          'get',
-          '/v1/courses/semester/{semesterId}',
-          {
-            params: {
-              path: {
-                semesterId: semester,
-              },
-            },
-          },
-        ],
-      });
-
-      console.log('invalidate');
-      // setEditingId(null);
-    },
-  });
+  const updateCourse = api.useMutation('put', '/v1/courses/{id}', {});
 
   if (!data || isLoading) {
     return <div>Loading...</div>;
@@ -66,30 +64,102 @@ export default function SemesterPage() {
   if (error) return `An error occured: ${error}`;
 
   const startEdit = (courseId: string, currentTitle: string) => {
-    setEditingId(courseId);
-    setDraftDisplay(currentTitle);
-  };
-
-  const cancelEdit = () => setEditingId(null);
-
-  const onSave = (courseId: string, newTitle: string) => {
-    if (draftDisplay === '') {
-      return;
-    }
-    updateCourse.mutate({
-      params: {
-        path: {
-          id: courseId,
-        },
-      },
-      body: {
-        name: newTitle,
-      },
+    setEditModal({
+      isOpen: true,
+      courseId,
+      currentTitle,
     });
   };
 
+  const closeEditModal = () =>
+    setEditModal({
+      isOpen: false,
+      courseId: '',
+      currentTitle: '',
+    });
+
+  const onSave = (courseId: string, newTitle: string) => {
+    if (newTitle === editModal.currentTitle) {
+      closeEditModal();
+      return;
+    }
+    // if title is empty, do not update
+    if (!newTitle.trim()) {
+      return;
+    }
+    updateCourse.mutate(
+      {
+        params: {
+          path: {
+            id: courseId,
+          },
+        },
+        body: {
+          name: newTitle,
+        },
+      },
+      {
+        onSuccess: (data) => {
+          utils.setQueryData(
+            [
+              'get',
+              '/v1/courses/semester/{semesterId}',
+              {
+                params: {
+                  path: {
+                    semesterId: semester,
+                  },
+                },
+              },
+            ],
+            (oldData: components['schemas']['CourseListResponse']) => {
+              if (!oldData || !oldData.courses) {
+                return oldData;
+              }
+              return {
+                courses: oldData.courses.map((c) => {
+                  if (c.id === courseId) {
+                    return {
+                      ...c,
+                      name: newTitle,
+                    };
+                  }
+                  return c;
+                }) as components['schemas']['CourseResponse'][],
+              };
+            },
+          );
+          closeEditModal();
+          // utils.invalidateQueries({
+          //   queryKey: [
+          //     'get',
+          //     '/v1/courses/semester/{semesterId}',
+          //     {
+          //       params: {
+          //         path: {
+          //           semesterId: semester,
+          //         },
+          //       },
+          //     },
+          //   ],
+          // });
+
+          // console.log('invalidate');
+          // setEditingId(null);
+        },
+      },
+    );
+  };
+
   return (
-    <main className="flex flex-1 gap-8 overflow-auto px-1 py-3">
+    <main className="relative flex flex-1 gap-8 overflow-auto px-1 py-3">
+      <EditCourseModal
+        isOpen={editModal.isOpen}
+        onClose={closeEditModal}
+        courseId={editModal.courseId}
+        currentTitle={editModal.currentTitle}
+        onSave={onSave}
+      />
       {/* 과목 목록 섹션 */}
       <section className="flex-1 rounded-lg bg-[#F7F7F7] p-6 shadow">
         <div className="">
@@ -105,11 +175,7 @@ export default function SemesterPage() {
               <CourseCard
                 key={course.id}
                 course={course}
-                isEditing={editingId === course.id}
-                draftDisplay={draftDisplay}
                 onStartEdit={startEdit}
-                onSave={onSave}
-                onCancel={cancelEdit}
                 onClick={() => router.push(`/${semester}/${course.id}`)}
               />
             ))}
@@ -242,5 +308,96 @@ export default function SemesterPage() {
         </Card>
       </div>
     </main>
+  );
+}
+
+function EditCourseModal({
+  isOpen,
+  onClose,
+  courseId,
+  currentTitle,
+  onSave,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  courseId: string;
+  currentTitle: string;
+  onSave: (courseId: string, newTitle: string) => void;
+}) {
+  const [newTitle, setNewTitle] = useState(currentTitle);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setNewTitle(currentTitle);
+    }
+  }, [isOpen, currentTitle]);
+
+  const handleSave = async () => {
+    if (!newTitle.trim()) return;
+
+    setIsSaving(true);
+    try {
+      onSave(courseId, newTitle);
+      onClose();
+    } catch (error) {
+      console.error('Failed to save:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setNewTitle(currentTitle);
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>과목 정보 수정</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div>
+            <Label htmlFor="course-title" className="text-sm font-medium">
+              과목명
+            </Label>
+            <Input
+              id="course-title"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="과목명을 입력하세요"
+              className="mt-1"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSave();
+                } else if (e.key === 'Escape') {
+                  handleCancel();
+                }
+              }}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={handleCancel}
+              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              disabled={isSaving}
+            >
+              취소
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving || !newTitle.trim()}
+              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {isSaving ? '저장 중...' : '저장'}
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

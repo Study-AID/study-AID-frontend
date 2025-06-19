@@ -121,7 +121,7 @@ function SemesterList({
           return (
             <Collapsible
               open={isActiveSem}
-              onOpenChange={() => router.push(isActiveSem ? '/' : `/${sem.id}`)}
+              onOpenChange={() => router.push(`/${sem.id}`)}
               key={sem.id}
             >
               <CollapsibleTrigger asChild>
@@ -210,9 +210,7 @@ function CourseList({
         return (
           <Collapsible
             open={isActiveCourse}
-            onOpenChange={() =>
-              router.push(isActiveCourse ? '/' : `/${semesterId}/${course.id}`)
-            }
+            onOpenChange={() => router.push(`/${semesterId}/${course.id}`)}
             key={course.id}
           >
             <CollapsibleTrigger asChild>
@@ -277,13 +275,7 @@ function LectureList({
             variant="ghost"
             className="w-full justify-start gap-3 rounded-lg border border-[#e6e6e6] p-3 font-medium text-[#1d1b20] shadow-sm transition-all duration-200 hover:border-[#d1d5db] hover:bg-[#f8f9fa] hover:shadow-md"
             key={lec.id}
-            onClick={() =>
-              router.push(
-                isActiveLec
-                  ? `/${semesterId}/${courseId}`
-                  : `/${semesterId}/${courseId}/${lec.id}`,
-              )
-            }
+            onClick={() => router.push(`/${semesterId}/${courseId}/${lec.id}`)}
           >
             <Calendar className="h-4 w-4 text-[#5971e7]" />
             <span>{lec.title}</span>

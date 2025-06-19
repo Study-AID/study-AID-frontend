@@ -192,6 +192,7 @@ function ChatWidget({
       e.preventDefault();
       handleSendMessage(inputText);
 
+      setInputText('');
       scrollToBottom();
     }
   };
@@ -395,6 +396,7 @@ function ChatWidget({
             onClick={() => {
               handleSendMessage(inputText);
 
+              setInputText('');
               scrollToBottom();
             }}
             disabled={isPending || !inputText.trim()}

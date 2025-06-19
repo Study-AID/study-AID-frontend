@@ -74,11 +74,11 @@ function GradeEditModal({
   course,
   trigger,
 }: {
-  course: components['schemas']['Course'];
+  course: components['schemas']['CourseResponse'];
   trigger: React.ReactNode;
 }) {
   const [editingCourse, setEditingCourse] =
-    useState<components['schemas']['Course']>(course);
+    useState<components['schemas']['CourseResponse']>(course);
   const [isOpen, setIsOpen] = useState(false);
   const utils = useQueryClient();
 
@@ -614,11 +614,102 @@ function AchievementEditModal({
   );
 }
 
+function EditLectureModal({
+  isOpen,
+  onClose,
+  lectureId,
+  currentTitle,
+  onSave,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  lectureId: string;
+  currentTitle: string;
+  onSave: (lectureId: string, newTitle: string) => void;
+}) {
+  const [title, setTitle] = useState(currentTitle);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitle(currentTitle);
+    }
+  }, [isOpen, currentTitle]);
+
+  const handleSave = async () => {
+    if (!title.trim()) return;
+
+    setIsSaving(true);
+    try {
+      await onSave(lectureId, title.trim());
+      onClose();
+    } catch (error) {
+      console.error('Failed to save:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setTitle(currentTitle);
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>강의 제목 수정</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div>
+            <Label htmlFor="lecture-title" className="text-sm font-medium">
+              강의 제목
+            </Label>
+            <Input
+              id="lecture-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="강의 제목을 입력하세요"
+              className="mt-1"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSave();
+                } else if (e.key === 'Escape') {
+                  handleCancel();
+                }
+              }}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={handleCancel}
+              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              disabled={isSaving}
+            >
+              취소
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving || !title.trim()}
+              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {isSaving ? '저장 중...' : '저장'}
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function GradeManagementCards({
   course,
   achievements,
 }: {
-  course: components['schemas']['Course'];
+  course: components['schemas']['CourseResponse'];
   achievements: components['schemas']['CourseAssessmentResponse'][];
 }) {
   return (
@@ -1130,7 +1221,7 @@ function CourseContent({
           <LectureList
             courseId={courseId}
             semesterId={semesterId}
-            initialLectures={lectures}
+            lectures={lectures}
             search={search}
             setSearch={setSearch}
           />
